@@ -1,291 +1,144 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <title>RETROCRAFT // CORE_FINAL_STAY</title>
-    <style>
-        @import url('https://fonts.cdnfonts.com/css/minecraftia');
-        :root { --p: #00f2ff; --err: #ff3e3e; --ok: #4dff91; --bg: #050505; --mc: 'Minecraftia', sans-serif; }
+/* --- RETROCRAFT AUDIO ENGINE --- */
+let audioCtx = null;
 
-        * { 
-            cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20"><path d="M0 0v16l4-4 3 7 3-1-3-7h6z" fill="%2300f2ff" stroke="black" stroke-width="1.5"/></svg>'), auto;
-            box-sizing: border-box; outline: none; transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
-        }
+function initAudio() {
+    if (audioCtx) return;
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+}
 
-        body, html { 
-            background: var(--bg); color: var(--p); font-family: var(--mc);
-            margin: 0; overflow: hidden; height: 100vh; width: 100vw;
-            box-shadow: inset 0 0 150px #000;
-        }
+// 1. CLICK DE BOTÓN: Onda cuadrada, caída ultra rápida de tono.
+function playClick() {
+    initAudio();
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(120, audioCtx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(40, audioCtx.currentTime + 0.05);
+    
+    gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.05);
+    
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    
+    osc.start();
+    osc.stop(audioCtx.currentTime + 0.05);
+}
 
-        /* --- SISTEMA DE PANTALLAS --- */
-        .screen { 
-            position: fixed; inset: 0; display: none; flex-direction: column; 
-            justify-content: center; align-items: center; opacity: 0; 
-            filter: blur(20px); transform: scale(1.1); z-index: 1;
-        }
-        .screen.active { display: flex; opacity: 1; filter: blur(0px); transform: scale(1); z-index: 10; }
+// 2. TYPING: Blip pixelado corto con frecuencia aleatoria.
+function playType() {
+    initAudio();
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    
+    const freq = Math.random() > 0.5 ? 880 : 920; // Alternancia de tono
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+    
+    gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
+    gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.02);
+    
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    
+    osc.start();
+    osc.stop(audioCtx.currentTime + 0.02);
+}
 
-        #landing { background: radial-gradient(circle at center, #0a0a0a 0%, #000 100%); }
-        .logo-anim { font-size: 50px; letter-spacing: 20px; text-shadow: 0 0 30px var(--p); animation: float 4s infinite ease-in-out; text-align: center; }
-        @keyframes float { 0%, 100% { transform: translateY(0); opacity: 0.7; } 50% { transform: translateY(-15px); opacity: 1; } }
+// 3. ALARMA/HURT: Sawtooth que cae agresivamente (Sonido "OOF").
+function playHurt() {
+    initAudio();
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(160, audioCtx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(60, audioCtx.currentTime + 0.2);
+    
+    gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+    gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.2);
+    
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    
+    osc.start();
+    osc.stop(audioCtx.currentTime + 0.2);
+}
 
-        .btn-cine {
-            padding: 18px 40px; border: 1px solid rgba(0,242,255,0.2); background: transparent;
-            color: var(--p); font-family: var(--mc); font-size: 9px; letter-spacing: 5px;
-            cursor: pointer; margin-top: 50px; text-transform: uppercase;
-        }
-        .btn-cine:hover { border-color: var(--p); background: rgba(0,242,255,0.05); box-shadow: 0 0 30px rgba(0,242,255,0.1); }
+// 4. PULSO DE CARGA: Tono puro y brillante (Level Up).
+function playPulse() {
+    initAudio();
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(1050, audioCtx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(1200, audioCtx.currentTime + 0.1);
+    
+    gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.1);
+    
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    
+    osc.start();
+    osc.stop(audioCtx.currentTime + 0.1);
+}
 
-        /* --- DASHBOARD --- */
-        #dash { padding: 50px; justify-content: flex-start; align-items: stretch; }
-        .header { display: flex; justify-content: space-between; border-bottom: 1px solid #111; padding-bottom: 25px; margin-bottom: 35px; }
-        .card-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 25px; }
-        .card { border: 1px solid rgba(255,255,255,0.05); padding: 30px; background: rgba(0,0,0,0.5); backdrop-filter: blur(10px); cursor: pointer; }
-        .card:hover { border-color: var(--p); transform: translateY(-5px); background: rgba(0,242,255,0.02); }
+// 5. GLITCH/EXPLOSIÓN: Generación de ruido blanco pixelado (Bit-crushed noise).
+function playGlitch() {
+    initAudio();
+    const bufferSize = audioCtx.sampleRate * 0.3; // 0.3 segundos
+    const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+    const data = buffer.getChannelData(0);
+    
+    // Generar ruido "cuadrado" aleatorio para efecto Bit-crush
+    let lastVal = 0;
+    for (let i = 0; i < bufferSize; i++) {
+        if (i % 8 === 0) lastVal = Math.random() * 2 - 1; // Sample & Hold
+        data[i] = lastVal;
+    }
 
-        /* --- ADMIN PANEL [P] --- */
-        #admin {
-            position: fixed; inset: 0; background: rgba(0,0,0,0.98); z-index: 9999;
-            display: none; flex-direction: column; justify-content: center; align-items: center; backdrop-filter: blur(30px);
-        }
-        .admin-box { width: 90%; max-width: 850px; padding: 40px; border: 1px solid #222; background: #000; overflow-y: auto; max-height: 90vh; }
-        .admin-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-bottom: 20px; }
-        label { font-size: 7px; color: #444; display: block; margin-bottom: 6px; letter-spacing: 1px; }
-        input, textarea { background: #0a0a0a; border: 1px solid #222; color: var(--p); padding: 12px; font-family: var(--mc); width: 100%; font-size: 9px; }
-        textarea { height: 70px; resize: none; }
+    const noise = audioCtx.createBufferSource();
+    noise.buffer = buffer;
+    
+    const gain = audioCtx.createGain();
+    gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3);
+    
+    noise.connect(gain);
+    gain.connect(audioCtx.destination);
+    noise.start();
+}
 
-        /* --- CARGA Y EFECTOS --- */
-        .load-bar { width: 300px; height: 1px; background: #111; margin-top: 40px; position: relative; }
-        .load-fill { height: 100%; background: var(--p); width: 0%; box-shadow: 0 0 15px var(--p); }
-        .data-stream { position: fixed; inset: 0; z-index: 9998; pointer-events: none; display: none; }
-        .stream-line { position: absolute; color: #fff; font-size: 10px; opacity: 0.4; white-space: nowrap; animation: move-up 0.7s linear infinite; }
-        @keyframes move-up { from { transform: translateY(100vh); } to { transform: translateY(-100%); } }
-        .crash-mode { animation: flash 0.06s infinite; }
-        @keyframes flash { 0%, 100% { filter: brightness(1); } 50% { filter: brightness(2) invert(1); } }
-    </style>
-</head>
-<body id="main-body">
+/* --- INTEGRACIÓN CON TU INTERFAZ --- */
 
-    <div id="chaos-layer" class="data-stream"></div>
+// Vincular a todos los botones y cartas
+document.querySelectorAll('.btn-cine, .card').forEach(el => {
+    el.addEventListener('mousedown', playClick);
+});
 
-    <div id="landing" class="screen active">
-        <div id="lan-title" class="logo-anim">RETROCRAFT</div>
-        <div id="lan-sub" style="font-size: 8px; letter-spacing: 10px; opacity: 0.4;">SISTEMA DE CONTROL NODO_S7</div>
-        <button id="lan-btn" class="btn-cine" onclick="switchScreen('register')">BOOT_SYSTEM</button>
-    </div>
+// Vincular a los inputs para sonido de escritura
+document.querySelectorAll('input, textarea').forEach(el => {
+    el.addEventListener('input', playType);
+});
 
-    <div id="register" class="screen">
-        <div style="width: 300px;">
-            <div style="font-size: 8px; letter-spacing: 4px; margin-bottom: 30px; text-align: center; opacity: 0.5;">AUTENTICACIÓN REQUERIDA</div>
-            <input type="text" id="reg-user" placeholder="OPERATOR_ID" style="margin-bottom: 10px;">
-            <input type="password" id="reg-pass" placeholder="ACCESS_KEY">
-            <button class="btn-cine" style="width: 100%; margin-top: 20px;" onclick="finalizeAuth()">INGRESAR</button>
-        </div>
-    </div>
+// Modificar tu función start8sCrash para usar los sonidos
+const originalCrash = start8sCrash;
+start8sCrash = async function() {
+    playHurt();
+    const glitchInterval = setInterval(playGlitch, 400);
+    setTimeout(() => clearInterval(glitchInterval), 8000);
+    return originalCrash.apply(this, arguments);
+};
 
-    <div id="cine" class="screen">
-        <div id="c-title" style="font-size: 12px; letter-spacing: 12px; opacity: 0.6;">PROCESANDO...</div>
-        <div class="load-bar"><div class="load-fill" id="c-fill"></div></div>
-    </div>
-
-    <div id="dash" class="screen">
-        <div class="header">
-            <div>
-                <div id="d-name" style="font-size: 20px; letter-spacing: 4px;">OPERADOR</div>
-                <div style="font-size: 7px; color: #333; margin-top: 6px;">RETROCRAFT // NÚCLEO ACTIVO</div>
-            </div>
-            <div id="clock" style="font-size: 10px; opacity: 0.4;">00:00:00</div>
-        </div>
-        <div class="card-grid">
-            <div class="card" onclick="runProc('NORMAL')"><h3 id="b1-title" style="font-size: 14px;"></h3><p id="b1-desc" style="font-size: 8px; opacity: 0.3;"></p></div>
-            <div class="card" onclick="runProc('DÍA')" style="border-color: var(--ok);"><h3 id="b3-title" style="font-size: 14px;"></h3><p id="b3-desc" style="font-size: 8px; opacity: 0.3;"></p></div>
-            <div class="card" onclick="runProc('EVENTO')" style="border-color: var(--err);"><h3 id="b2-title" style="font-size: 14px;"></h3><p id="b2-desc" style="font-size: 8px; opacity: 0.3;"></p></div>
-        </div>
-        <div id="log-console" style="margin-top: auto; height: 100px; font-size: 8px; color: #1a1a1a; display: flex; flex-direction: column-reverse; overflow: hidden;"></div>
-    </div>
-
-    <div id="status-screen" class="screen" style="background: #000;">
-        <div id="status-msg" style="font-size: 35px; letter-spacing: 15px; color: var(--err); text-align: center;">SISTEMA_CAÍDO</div>
-        <div id="status-sub" style="margin-top: 20px; font-size: 9px; opacity: 0.4; text-align: center;">REBOOT_REQUIRED // PRESS [ R ]</div>
-    </div>
-
-    <div id="admin">
-        <div class="admin-box">
-            <div style="font-size: 10px; letter-spacing: 4px; border-bottom: 1px solid #222; padding-bottom: 15px; margin-bottom: 25px;">CONFIGURACIÓN MAESTRA</div>
-            <div class="admin-grid">
-                <div>
-                    <label>TÍTULO PRINCIPAL</label><input type="text" id="ed-lan-t">
-                    <label>SUBTÍTULO</label><input type="text" id="ed-lan-s">
-                    <label>TEXTO BOTÓN</label><input type="text" id="ed-lan-b">
-                </div>
-                <div>
-                    <label>NOMBRE OPERADOR</label><input type="text" id="ed-name">
-                    <label>COLOR (HEX)</label><input type="text" id="ed-color">
-                    <label>PASSWORD</label><input type="text" id="ed-pass">
-                </div>
-                <div>
-                    <label>TEXTO CARGA</label><input type="text" id="ed-cine">
-                    <label>TÍTULO B1</label><input type="text" id="ed-b1-t">
-                    <label>TÍTULO B2</label><input type="text" id="ed-b2-t">
-                </div>
-            </div>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-                <div><label>DESCRIPCIÓN B1</label><textarea id="ed-b1-d"></textarea></div>
-                <div><label>DESCRIPCIÓN B2</label><textarea id="ed-b2-d"></textarea></div>
-            </div>
-            <button class="btn-cine" style="width: 100%; margin-top: 30px;" onclick="save()">GUARDAR Y APLICAR CAMBIOS</button>
-            <div style="text-align: center; margin-top: 15px; font-size: 7px; opacity: 0.2;">[ P ] PARA VOLVER</div>
-        </div>
-    </div>
-
-    <script>
-        let config = JSON.parse(localStorage.getItem('retrocraft_v4')) || {
-            lanT: "RETROCRAFT", lanS: "SISTEMA DE CONTROL NODO_S7", lanB: "BOOT_SYSTEM",
-            name: "JHON HERNANDEZ", color: "#00f2ff", pass: "1234",
-            b1T: "REPARAR_NODO", b1D: "Diagnóstico de seguridad rápido.",
-            b2T: "PROTOCOLO_X", b2D: "⚠️ Inicia secuencia de colapso (8s).",
-            b3T: "DÍA_ESTÁNDAR", b3D: "Entorno de trabajo normal.",
-            cine: "INICIALIZANDO..."
-        };
-
-        let isBusy = false;
-
-        function apply() {
-            document.documentElement.style.setProperty('--p', config.color);
-            document.getElementById('lan-title').innerText = config.lanT;
-            document.getElementById('lan-sub').innerText = config.lanS;
-            document.getElementById('lan-btn').innerText = config.lanB;
-            document.getElementById('d-name').innerText = config.name;
-            document.getElementById('b1-title').innerText = config.b1T;
-            document.getElementById('b1-desc').innerText = config.b1D;
-            document.getElementById('b2-title').innerText = config.b2T;
-            document.getElementById('b2-desc').innerText = config.b2D;
-            document.getElementById('b3-title').innerText = config.b3T;
-            document.getElementById('b3-desc').innerText = config.b3D;
-            
-            document.getElementById('ed-lan-t').value = config.lanT;
-            document.getElementById('ed-lan-s').value = config.lanS;
-            document.getElementById('ed-lan-b').value = config.lanB;
-            document.getElementById('ed-name').value = config.name;
-            document.getElementById('ed-color').value = config.color;
-            document.getElementById('ed-pass').value = config.pass;
-            document.getElementById('ed-cine').value = config.cine;
-            document.getElementById('ed-b1-t').value = config.b1T;
-            document.getElementById('ed-b1-d').value = config.b1D;
-            document.getElementById('ed-b2-t').value = config.b2T;
-            document.getElementById('ed-b2-d').value = config.b2D;
-        }
-
-        function save() {
-            config = {
-                lanT: document.getElementById('ed-lan-t').value,
-                lanS: document.getElementById('ed-lan-s').value,
-                lanB: document.getElementById('ed-lan-b').value,
-                name: document.getElementById('ed-name').value,
-                color: document.getElementById('ed-color').value,
-                pass: document.getElementById('ed-pass').value,
-                cine: document.getElementById('ed-cine').value,
-                b1T: document.getElementById('ed-b1-t').value,
-                b1D: document.getElementById('ed-b1-d').value,
-                b2T: document.getElementById('ed-b2-t').value,
-                b2D: document.getElementById('ed-b2-d').value,
-                b3T: "DÍA_ESTÁNDAR", b3D: "Entorno de trabajo normal."
-            };
-            localStorage.setItem('retrocraft_v4', JSON.stringify(config));
-            apply();
-            toggleAdmin();
-            addLog("NÚCLEO ACTUALIZADO.");
-        }
-
-        function switchScreen(id) {
-            document.querySelectorAll('.screen').forEach(s => {
-                s.classList.remove('active');
-                setTimeout(() => { if(!s.classList.contains('active')) s.style.display = 'none'; }, 400);
-            });
-            const target = document.getElementById(id);
-            target.style.display = 'flex';
-            setTimeout(() => target.classList.add('active'), 50);
-        }
-
-        function finalizeAuth() {
-            if(document.getElementById('reg-pass').value === config.pass) runProc('INICIO');
-            else { addLog("ERROR: PASSWORD_INCORRECTA."); alert("ACCESO DENEGADO"); }
-        }
-
-        async function runProc(type) {
-            isBusy = true;
-            switchScreen('cine');
-            document.getElementById('c-title').innerText = config.cine.toUpperCase();
-            let p = 0; 
-            const fill = document.getElementById('c-fill');
-            
-            let interval = setInterval(() => {
-                p++;
-                fill.style.width = p + '%';
-                if(p >= 100) {
-                    clearInterval(interval);
-                    setTimeout(() => {
-                        if(type === 'EVENTO') start8sCrash();
-                        else {
-                            isBusy = false;
-                            switchScreen('dash');
-                            addLog("OPERATIVO.");
-                        }
-                    }, 500);
-                }
-            }, 30);
-        }
-
-        async function start8sCrash() {
-            const body = document.getElementById('main-body');
-            const chaos = document.getElementById('chaos-layer');
-            body.classList.add('crash-mode');
-            chaos.style.display = 'block';
-            switchScreen('status-screen');
-
-            for(let i=0; i<80; i++) {
-                const l = document.createElement('div');
-                l.className = 'stream-line';
-                l.style.left = Math.random() * 100 + '%';
-                l.innerText = `ERR_0x${Math.random().toString(16).substr(2,4)}_COLLAPSE`;
-                chaos.appendChild(l);
-            }
-
-            // A los 8 segundos se queda estático con el nuevo mensaje
-            setTimeout(() => {
-                body.classList.remove('crash-mode');
-                chaos.style.display = 'none';
-                chaos.innerHTML = '';
-                // ESTADO FINAL SOLICITADO
-                document.getElementById('status-msg').innerText = "DIA NORMAL";
-                document.getElementById('status-msg').style.color = "var(--ok)";
-                document.getElementById('status-sub').innerText = "RESTABLECIENDO SERVIDOR...";
-                document.getElementById('status-sub').style.opacity = "1";
-                // No se cambia la pantalla, se queda allí. isBusy sigue en true para bloquear el menú P si lo deseas.
-            }, 8000);
-        }
-
-        window.onkeydown = (e) => {
-            const k = e.key.toLowerCase();
-            if (k === 'r' && e.target.tagName !== "INPUT") location.reload();
-            if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA") return;
-            if (k === 'p' && !isBusy) toggleAdmin();
-        };
-
-        function toggleAdmin() {
-            const adm = document.getElementById('admin');
-            adm.style.display = adm.style.display === 'flex' ? 'none' : 'flex';
-        }
-
-        function addLog(m) {
-            const d = document.createElement('div');
-            d.innerText = `> [${new Date().toLocaleTimeString()}] ${m}`;
-            document.getElementById('log-console').prepend(d);
-        }
-
-        setInterval(() => { document.getElementById('clock').innerText = new Date().toLocaleTimeString(); }, 1000);
-        apply();
-    </script>
-</body>
-</html>
+// Modificar runProc para el sonido de carga
+const originalRunProc = runProc;
+runProc = async function(type) {
+    const pulseInterval = setInterval(playPulse, 200);
+    const result = await originalRunProc.apply(this, arguments);
+    clearInterval(pulseInterval);
+    return result;
+};
+        
