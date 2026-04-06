@@ -2,14 +2,14 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>S7_TERMINAL // STABLE_RECOVERY</title>
+    <title>RETROCRAFT // CINEMATIC_CORE</title>
     <style>
         @import url('https://fonts.cdnfonts.com/css/minecraftia');
         :root { --p: #00f2ff; --err: #ff3e3e; --ok: #4dff91; --bg: #050505; --mc: 'Minecraftia', sans-serif; }
 
         * { 
             cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20"><path d="M0 0v16l4-4 3 7 3-1-3-7h6z" fill="%2300f2ff" stroke="black" stroke-width="1.5"/></svg>'), auto;
-            box-sizing: border-box; outline: none;
+            box-sizing: border-box; outline: none; transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
         }
 
         body, html { 
@@ -18,125 +18,149 @@
             box-shadow: inset 0 0 150px #000;
         }
 
-        /* --- EFECTOS DE COLAPSO --- */
-        @keyframes flash {
-            0%, 100% { filter: brightness(1) invert(0); }
-            50% { filter: brightness(2) invert(1); }
-        }
-        .crash-mode { animation: flash 0.05s infinite; }
-
-        .data-stream {
-            position: fixed; inset: 0; z-index: 9998; 
-            pointer-events: none; display: none; overflow: hidden;
-            font-size: 10px; color: #fff; opacity: 0.6;
-        }
-        .stream-line { position: absolute; white-space: nowrap; animation: move-up 0.6s linear infinite; }
-        @keyframes move-up { from { transform: translateY(100vh); } to { transform: translateY(-100%); } }
-
-        /* --- INTERFAZ --- */
+        /* --- CAPAS CINEMATOGRÁFICAS --- */
         .screen { 
             position: fixed; inset: 0; display: none; flex-direction: column; 
-            justify-content: center; align-items: center; opacity: 0; transition: opacity 0.3s;
+            justify-content: center; align-items: center; opacity: 0; 
+            filter: blur(20px); transform: scale(1.1);
         }
-        .screen.active { display: flex; opacity: 1; }
+        .screen.active { display: flex; opacity: 1; filter: blur(0px); transform: scale(1); z-index: 10; }
 
-        #dash { padding: 50px; justify-content: flex-start; align-items: stretch; }
-        .header { display: flex; justify-content: space-between; border-bottom: 2px solid #111; padding-bottom: 20px; margin-bottom: 30px; }
-        .card-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
-        .card { border: 1px solid #151515; padding: 25px; background: rgba(0,0,0,0.8); transition: 0.2s; cursor: pointer; }
-        .card:hover { border-color: var(--p); transform: translateY(-3px); }
+        /* --- PÁGINA DE INICIO (EDITABLE) --- */
+        #landing { background: radial-gradient(circle at center, #0a0a0a 0%, #000 100%); }
+        .logo-anim { font-size: 55px; letter-spacing: 25px; text-shadow: 0 0 30px var(--p); animation: float 4s infinite ease-in-out; text-align: center; }
+        @keyframes float { 0%, 100% { transform: translateY(0); opacity: 0.6; } 50% { transform: translateY(-10px); opacity: 1; } }
 
-        .bar-container { width: 500px; height: 2px; background: #111; margin-top: 30px; }
-        .fill { height: 100%; background: var(--p); width: 0%; box-shadow: 0 0 20px var(--p); }
+        /* --- BOTONES --- */
+        .btn-cine {
+            padding: 18px 45px; border: 1px solid rgba(0,242,255,0.2); background: transparent;
+            color: var(--p); font-family: var(--mc); font-size: 9px; letter-spacing: 6px;
+            cursor: pointer; position: relative; margin-top: 50px;
+        }
+        .btn-cine:hover { border-color: var(--p); background: rgba(0,242,255,0.05); box-shadow: 0 0 40px rgba(0,242,255,0.1); }
 
-        /* ADMIN */
+        /* --- DASHBOARD --- */
+        #dash { padding: 60px; justify-content: flex-start; align-items: stretch; }
+        .header { display: flex; justify-content: space-between; border-bottom: 1px solid #111; padding-bottom: 30px; margin-bottom: 40px; }
+        .card-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 30px; }
+        .card { 
+            border: 1px solid rgba(255,255,255,0.03); padding: 35px; background: rgba(255,255,255,0.01); 
+            backdrop-filter: blur(10px);
+        }
+        .card:hover { border-color: var(--p); background: rgba(0,242,255,0.04); transform: translateY(-5px); }
+
+        /* --- ADMIN PANEL (P) --- */
         #admin {
-            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            background: #000; border: 2px solid #222; padding: 30px;
-            display: none; z-index: 10000; width: 850px;
+            position: fixed; inset: 0; background: rgba(0,0,0,0.96); z-index: 10000;
+            display: none; flex-direction: column; justify-content: center; align-items: center; backdrop-filter: blur(25px);
+            overflow-y: auto; padding: 40px 0;
         }
-        input, textarea { background: #080808; border: 1px solid #222; color: var(--p); padding: 10px; font-family: var(--mc); font-size: 9px; width: 100%; margin-bottom: 10px; }
-        .btn { cursor: pointer; border: 1px solid var(--p); background: transparent; color: var(--p); padding: 12px; font-family: var(--mc); text-transform: uppercase; }
-        .btn:hover { background: var(--p); color: #000; }
+        .admin-box { width: 80%; max-width: 800px; padding: 40px; border: 1px solid #222; background: #000; }
+        .admin-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .field-group { margin-bottom: 15px; }
+        label { font-size: 7px; color: #444; display: block; margin-bottom: 5px; letter-spacing: 2px; }
+        input, textarea { background: #080808; border: 1px solid #1a1a1a; color: var(--p); padding: 12px; font-family: var(--mc); width: 100%; font-size: 10px; }
+        
+        /* --- CARGA Y ERROR --- */
+        .load-fill { height: 100%; background: var(--p); width: 0%; box-shadow: 0 0 20px var(--p); }
+        .crash-mode { animation: flash 0.05s infinite; }
+        @keyframes flash { 0%, 100% { filter: brightness(1) invert(0); } 50% { filter: brightness(2) invert(1); } }
+        .data-stream { position: fixed; inset: 0; z-index: 9998; pointer-events: none; display: none; font-size: 10px; color: #fff; opacity: 0.6; }
+        .stream-line { position: absolute; white-space: nowrap; animation: move-up 0.6s linear infinite; }
+        @keyframes move-up { from { transform: translateY(100vh); } to { transform: translateY(-100%); } }
     </style>
 </head>
 <body id="main-body">
 
     <div id="chaos-layer" class="data-stream"></div>
 
-    <div id="status-screen" class="screen">
-        <div id="status-msg" style="font-size: 30px; letter-spacing: 10px; font-weight: bold;">SISTEMA_CRÍTICO</div>
-        <div id="status-sub" style="margin-top: 20px; font-size: 10px; opacity: 0.5;">ERROR_CODE: 0xNACHOS_REBOOT</div>
+    <div id="landing" class="screen active">
+        <div id="lan-title" class="logo-anim">RETROCRAFT</div>
+        <div id="lan-sub" style="font-size: 7px; letter-spacing: 12px; opacity: 0.3;">SISTEMA DE CONTROL PRIVADO</div>
+        <button id="lan-btn" class="btn-cine" onclick="switchScreen('register')">BOOT_SYSTEM</button>
     </div>
 
-    <div id="intro" class="screen active">
-        <div id="in-title" style="font-size: 45px; letter-spacing: 15px; text-shadow: 0 0 10px var(--p);">S7_NODE</div>
-        <div id="in-sub" style="font-size: 10px; color: #222; margin-top: 20px; letter-spacing: 5px;">NACHOS_STUDIO // CORE_SYSTEM</div>
-        <div id="in-enter" style="margin-top: 100px; font-size: 8px; opacity: 0.3;">[ PULSAR ENTER ]</div>
-    </div>
-
-    <div id="login" class="screen">
-        <div style="width: 320px; border: 1px solid #111; padding: 40px; background: #000;">
-            <div style="font-size: 8px; color: #222; text-align: center; margin-bottom: 20px;">SECURITY_CHECK</div>
-            <input type="text" id="u-in" placeholder="OPERATOR_ID">
-            <input type="password" id="p-in" placeholder="PASSWORD">
-            <button class="btn" onclick="doLogin()" style="width: 100%; margin-top: 10px;">ACCEDER</button>
+    <div id="register" class="screen">
+        <div style="width: 320px;">
+            <div style="font-size: 9px; letter-spacing: 5px; margin-bottom: 40px; text-align: center; opacity: 0.6;">ACCESO AL NODO</div>
+            <input type="text" id="reg-user" placeholder="USER_ID">
+            <input type="password" id="reg-pass" placeholder="PASSWORD">
+            <button class="btn-cine" style="width: 100%;" onclick="finalizeAuth()">INICIAR SESIÓN</button>
         </div>
+    </div>
+
+    <div id="cine" class="screen">
+        <div id="c-title" style="font-size: 15px; letter-spacing: 15px; opacity: 0.5;">CONECTANDO...</div>
+        <div style="width: 350px; height: 1px; background: #111; margin-top: 40px;"><div class="load-fill" id="c-fill"></div></div>
     </div>
 
     <div id="dash" class="screen">
         <div class="header">
-            <div><div id="d-name" style="font-size: 18px;"></div><div style="font-size: 8px; color: #222;">SYSTEM_READY</div></div>
-            <div id="clock" style="font-size: 10px; opacity: 0.6;">00:00:00</div>
+            <div><div id="d-name" style="font-size: 22px; letter-spacing: 5px;"></div><div style="font-size: 8px; color: #333; margin-top: 5px;">RETROCRAFT_OS // ONLINE</div></div>
+            <div id="clock" style="font-size: 12px; opacity: 0.5;">00:00:00</div>
         </div>
         <div class="card-grid">
-            <div class="card" onclick="runProc('NORMAL')"><h3 id="b1-title"></h3><p id="b1-desc"></p></div>
-            <div class="card" onclick="runProc('DÍA')" style="border-color: var(--ok);"><h3 id="b3-title"></h3><p id="b3-desc"></p></div>
-            <div class="card" onclick="runProc('EVENTO')" style="border-color: var(--err);"><h3 id="b2-title"></h3><p id="b2-desc"></p></div>
+            <div class="card" onclick="runProc('NORMAL')"><h3 id="b1-title"></h3><p id="b1-desc" style="font-size: 8px; opacity: 0.4; line-height: 1.6;"></p></div>
+            <div class="card" onclick="runProc('DÍA')" style="border-color: var(--ok);"><h3 id="b3-title"></h3><p id="b3-desc" style="font-size: 8px; opacity: 0.4;"></p></div>
+            <div class="card" onclick="runProc('EVENTO')" style="border-color: var(--err);"><h3 id="b2-title"></h3><p id="b2-desc" style="font-size: 8px; opacity: 0.4;"></p></div>
         </div>
-        <div id="log-console" style="margin-top: auto; height: 140px; border: 1px solid #111; padding: 20px; font-size: 9px; color: #222; display: flex; flex-direction: column-reverse; overflow: hidden;"></div>
+        <div id="log-console" style="margin-top: auto; height: 120px; font-size: 8px; color: #151515; display: flex; flex-direction: column-reverse; overflow: hidden;"></div>
     </div>
 
-    <div id="cine" class="screen">
-        <div id="c-title" style="font-size: 22px; letter-spacing: 10px;"></div>
-        <div class="bar-container"><div class="fill" id="c-fill"></div></div>
+    <div id="status-screen" class="screen" style="background: #000;">
+        <div id="status-msg" style="font-size: 40px; letter-spacing: 20px; font-weight: bold; color: var(--err);">NODO_COLAPSADO</div>
+        <div id="status-sub" style="margin-top: 20px; font-size: 10px; opacity: 0.3;">ERROR_CODE: 0xRETROCRAFT_FAIL // PULSAR [ R ]</div>
     </div>
 
     <div id="admin">
-        <div style="margin-bottom: 20px; font-size: 10px;">CORE_CONFIGURATION</div>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-            <div>
-                <input type="text" id="ed-in-title"><input type="text" id="ed-in-sub">
-                <input type="text" id="ed-name"><input type="text" id="ed-color">
+        <div class="admin-box">
+            <div style="margin-bottom: 30px; font-size: 10px; letter-spacing: 5px; border-bottom: 1px solid #222; padding-bottom: 10px;">CONFIGURACIÓN DEL NÚCLEO RETROCRAFT</div>
+            
+            <div class="admin-grid">
+                <div>
+                    <div class="field-group"><label>TÍTULO INICIO</label><input type="text" id="ed-lan-t"></div>
+                    <div class="field-group"><label>SUBTÍTULO INICIO</label><input type="text" id="ed-lan-s"></div>
+                    <div class="field-group"><label>TEXTO BOTÓN</label><input type="text" id="ed-lan-b"></div>
+                    <div class="field-group"><label>NOMBRE OPERADOR</label><input type="text" id="ed-name"></div>
+                </div>
+                <div>
+                    <div class="field-group"><label>COLOR PRIMARIO (HEX)</label><input type="text" id="ed-color"></div>
+                    <div class="field-group"><label>CONTRASEÑA</label><input type="text" id="ed-pass"></div>
+                    <div class="field-group"><label>TEXTO DE CARGA</label><input type="text" id="ed-cine"></div>
+                </div>
             </div>
-            <div>
-                <input type="text" id="ed-b1-t"><textarea id="ed-b1-d"></textarea>
-                <input type="text" id="ed-b2-t"><textarea id="ed-b2-d"></textarea>
+
+            <div style="border-top: 1px solid #111; margin-top: 20px; padding-top: 20px;">
+                <div class="admin-grid">
+                    <div class="field-group"><label>BOTÓN 1 TÍTULO</label><input type="text" id="ed-b1-t"></div>
+                    <div class="field-group"><label>BOTÓN 1 DESC</label><textarea id="ed-b1-d"></textarea></div>
+                    <div class="field-group"><label>BOTÓN 2 TÍTULO</label><input type="text" id="ed-b2-t"></div>
+                    <div class="field-group"><label>BOTÓN 2 DESC</label><textarea id="ed-b2-d"></textarea></div>
+                </div>
             </div>
+
+            <button class="btn-cine" style="width: 100%; margin-top: 20px;" onclick="save()">APLICAR CAMBIOS</button>
+            <div style="text-align: center; margin-top: 15px; font-size: 7px; opacity: 0.3;">PRESIONA [ P ] PARA CANCELAR</div>
         </div>
-        <input type="text" id="ed-b3-t"><textarea id="ed-b3-d"></textarea>
-        <input type="text" id="ed-cine"><input type="password" id="ed-pass">
-        <button class="btn" onclick="save()">GUARDAR_CAMBIOS</button>
-        <button class="btn" onclick="toggleAdmin()">SALIR</button>
     </div>
 
     <script>
-        let config = JSON.parse(localStorage.getItem('s7_stable_cfg')) || {
-            inT: "S7_NODE", inS: "NACHOS_STUDIO // STABLE_MODE", inE: "[ PULSAR_ENTER ]",
+        let config = JSON.parse(localStorage.getItem('rc_cine_cfg')) || {
+            lanT: "RETROCRAFT", lanS: "SISTEMA DE CONTROL PRIVADO", lanB: "BOOT_SYSTEM",
             name: "JHON HERNANDEZ", color: "#00f2ff", pass: "1234",
-            b1T: "REPARAR_NODO", b1D: "Ejecuta un diagnóstico de seguridad rápido.",
-            b2T: "PROTOCOLO_X", b2D: "⚠️ ADVERTENCIA: Inicia secuencia de colapso (8s).",
-            b3T: "DÍA_ESTÁNDAR", b3D: "Carga el entorno de trabajo normal.",
-            cine: "PROCESANDO..."
+            b1T: "REPARAR_NODO", b1D: "Diagnóstico de seguridad rápido.",
+            b2T: "PROTOCOLO_X", b2D: "⚠️ Inicia secuencia de colapso (8s).",
+            b3T: "DÍA_ESTÁNDAR", b3D: "Entorno de trabajo normal.",
+            cine: "INICIALIZANDO NÚCLEO..."
         };
 
         let isBusy = false;
 
         function apply() {
             document.documentElement.style.setProperty('--p', config.color);
-            document.getElementById('in-title').innerText = config.inT;
-            document.getElementById('in-sub').innerText = config.inS;
-            document.getElementById('in-enter').innerText = config.inE;
+            document.getElementById('lan-title').innerText = config.lanT;
+            document.getElementById('lan-sub').innerText = config.lanS;
+            document.getElementById('lan-btn').innerText = config.lanB;
             document.getElementById('d-name').innerText = config.name;
             document.getElementById('b1-title').innerText = config.b1T;
             document.getElementById('b1-desc').innerText = config.b1D;
@@ -145,54 +169,54 @@
             document.getElementById('b3-title').innerText = config.b3T;
             document.getElementById('b3-desc').innerText = config.b3D;
             
-            document.getElementById('ed-in-title').value = config.inT;
-            document.getElementById('ed-in-sub').value = config.inS;
+            // Llenar inputs de la P
+            document.getElementById('ed-lan-t').value = config.lanT;
+            document.getElementById('ed-lan-s').value = config.lanS;
+            document.getElementById('ed-lan-b').value = config.lanB;
             document.getElementById('ed-name').value = config.name;
             document.getElementById('ed-color').value = config.color;
             document.getElementById('ed-b1-t').value = config.b1T;
             document.getElementById('ed-b1-d').value = config.b1D;
             document.getElementById('ed-b2-t').value = config.b2T;
             document.getElementById('ed-b2-d').value = config.b2D;
-            document.getElementById('ed-b3-t').value = config.b3T;
-            document.getElementById('ed-b3-d').value = config.b3D;
             document.getElementById('ed-cine').value = config.cine;
             document.getElementById('ed-pass').value = config.pass;
         }
 
         function save() {
             config = {
-                inT: document.getElementById('ed-in-title').value, inS: document.getElementById('ed-in-sub').value,
-                inE: "[ ENTER ]", name: document.getElementById('ed-name').value,
+                lanT: document.getElementById('ed-lan-t').value, lanS: document.getElementById('ed-lan-sub').value || config.lanS,
+                lanB: document.getElementById('ed-lan-b').value, name: document.getElementById('ed-name').value,
                 color: document.getElementById('ed-color').value, b1T: document.getElementById('ed-b1-t').value,
                 b1D: document.getElementById('ed-b1-d').value, b2T: document.getElementById('ed-b2-t').value,
-                b2D: document.getElementById('ed-b2-d').value, b3T: document.getElementById('ed-b3-t').value,
-                b3D: document.getElementById('ed-b3-d').value, cine: document.getElementById('ed-cine').value,
-                pass: document.getElementById('ed-pass').value
+                b2D: document.getElementById('ed-b2-d').value, b3T: config.b3T, b3D: config.b3D,
+                cine: document.getElementById('ed-cine').value, pass: document.getElementById('ed-pass').value,
+                lanS: document.getElementById('ed-lan-s').value
             };
-            localStorage.setItem('s7_stable_cfg', JSON.stringify(config));
+            localStorage.setItem('rc_cine_cfg', JSON.stringify(config));
             apply(); toggleAdmin();
         }
 
         function switchScreen(id) {
-            document.querySelectorAll('.screen').forEach(s => { s.classList.remove('active'); s.style.display = 'none'; });
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
             const t = document.getElementById(id); t.style.display = 'flex';
             setTimeout(() => t.classList.add('active'), 50);
         }
 
-        // CONTROLADOR DE TECLAS GLOBAL
+        function finalizeAuth() {
+            const user = document.getElementById('reg-user').value;
+            if(user) config.name = user.toUpperCase();
+            runProc('INICIO');
+        }
+
         window.onkeydown = (e) => {
             const k = e.key.toLowerCase();
-            // REINICIO MAESTRO CON R (No funciona dentro de inputs)
-            if (k === 'r' && e.target.tagName !== "INPUT" && e.target.tagName !== "TEXTAREA") {
-                location.reload();
-            }
+            if (k === 'r' && e.target.tagName !== "INPUT" && e.target.tagName !== "TEXTAREA") location.reload();
             if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA") return;
             if (k === 'p' && !isBusy) toggleAdmin();
-            if (k === 'enter' && document.getElementById('intro').classList.contains('active')) switchScreen('login');
         };
 
-        function toggleAdmin() { document.getElementById('admin').style.display = document.getElementById('admin').style.display === 'block' ? 'none' : 'block'; }
-        function doLogin() { if(document.getElementById('p-in').value === config.pass) switchScreen('dash'); }
+        function toggleAdmin() { document.getElementById('admin').style.display = document.getElementById('admin').style.display === 'flex' ? 'none' : 'flex'; }
 
         async function runProc(type) {
             isBusy = true; switchScreen('cine');
@@ -203,62 +227,37 @@
                 if(p === 100) {
                     await new Promise(r => setTimeout(r, 600));
                     if(type === 'EVENTO') await start8sCrash();
-                    else { 
-                        isBusy = false; 
-                        switchScreen('dash'); 
-                        addLog(type === 'DÍA' ? "SISTEMA RESTAURADO: MODO DÍA." : "OPTIMIZACIÓN COMPLETA.");
-                    }
+                    else { isBusy = false; switchScreen('dash'); addLog("ESTADO: NODO ESTABLE."); }
                     return;
                 }
-                await new Promise(r => setTimeout(r, 20));
+                await new Promise(r => setTimeout(r, 25));
             }
         }
 
         async function start8sCrash() {
             const body = document.getElementById('main-body');
             const chaos = document.getElementById('chaos-layer');
-            const status = document.getElementById('status-screen');
-            const sMsg = document.getElementById('status-msg');
-            const sSub = document.getElementById('status-sub');
-
             body.classList.add('crash-mode');
             chaos.style.display = 'block';
             switchScreen('status-screen');
 
-            // Crear lluvia de logs
             for(let i=0; i<100; i++) {
                 const l = document.createElement('div');
                 l.className = 'stream-line'; l.style.left = Math.random() * 100 + '%';
                 l.style.animationDuration = (0.2 + Math.random() * 0.5) + 's';
-                l.innerText = `NACHOS_FATAL_ERROR_0x${Math.random().toString(16).substr(2,6)}`;
+                l.innerText = `RETROCRAFT_FATAL_0x${Math.random().toString(16).substr(2,6)}`;
                 chaos.appendChild(l);
             }
 
-            // DURACIÓN 8 SEGUNDOS
             setTimeout(async () => {
                 body.classList.remove('crash-mode');
                 chaos.style.display = 'none';
                 chaos.innerHTML = '';
-                
-                // Transición a recuperación
-                sMsg.innerText = "DÍA NORMAL";
-                sMsg.style.color = "var(--ok)";
-                sSub.innerText = "RECUPERANDO FLUJO DE TRABAJO...";
-                
+                document.getElementById('status-msg').innerText = "RECUPERANDO...";
+                document.getElementById('status-msg').style.color = "var(--ok)";
                 await new Promise(r => setTimeout(r, 2000));
-                
-                // Auto-vuelta al Dashboard
-                isBusy = false;
-                switchScreen('dash');
-                addLog("AUTO_REBOOT: FLUJO DE DÍA NORMAL ACTIVO.");
-                
-                // Reset del mensaje de estado para el próximo error
-                setTimeout(() => {
-                    sMsg.innerText = "SISTEMA_CRÍTICO";
-                    sMsg.style.color = "var(--err)";
-                    sSub.innerText = "ERROR_CODE: 0xNACHOS_REBOOT";
-                }, 1000);
-                
+                isBusy = false; switchScreen('dash');
+                addLog("AUTO_REBOOT: EXITOSO.");
             }, 8000);
         }
 
