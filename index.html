@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>VOID_SYSTEM // CRITICAL_LOAD_SEQUENCE</title>
+<title>VOID_SYSTEM // LAB_MASTER_EDITION</title>
 <style>
 @import url('https://fonts.cdnfonts.com/css/minecraftia');
 
@@ -26,7 +26,7 @@ body.show-real-cursor { cursor: auto !important; }
 
 #cursor {
     width: 24px; height: 24px; background: transparent;
-    position: fixed; pointer-events: none; z-index: 10000000;
+    position: fixed; pointer-events: none; z-index: 20000000;
     border: 2px solid var(--p); box-shadow: 0 0 20px var(--p-glow);
     display: flex; align-items: center; justify-content: center;
     transform: translate(-50%, -50%); will-change: transform;
@@ -34,13 +34,10 @@ body.show-real-cursor { cursor: auto !important; }
 #cursor::after { content: ''; width: 4px; height: 4px; background: white; border-radius: 50%; }
 
 .screen { position: fixed; inset: 0; display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 100; }
-.screen.active { display: flex; animation: fadeIn 0.5s forwards; }
-
-@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+.screen.active { display: flex; }
 
 .win { 
     background: var(--win); border: 1px solid rgba(0, 229, 255, 0.3); 
-    box-shadow: 0 20px 60px rgba(0,0,0,0.9);
     display: none; position: absolute; z-index: 500; flex-direction: column;
     border-radius: 2px; overflow: hidden; backdrop-filter: blur(15px);
 }
@@ -51,41 +48,40 @@ body.show-real-cursor { cursor: auto !important; }
     display: flex; justify-content: space-between; font-size: 10px; color: var(--p);
 }
 
-#win-con { 
-    width: 700px; height: 500px; top: 50%; left: 50%; 
-    transform: translate(-50%, -50%); border: 2px solid var(--p);
-}
-#con-log { 
-    background: #000; flex: 1; padding: 20px; font-size: 10px; 
-    color: #0f0; overflow-y: auto; font-family: monospace; line-height: 1.4;
-}
+/* TERMINAL */
+#win-con { width: 700px; height: 500px; top: 50%; left: 50%; transform: translate(-50%, -50%); border: 2px solid var(--p); }
+#con-log { background: #000; flex: 1; padding: 20px; font-size: 10px; color: #0f0; overflow-y: auto; font-family: monospace; }
 
 @keyframes mega-shake {
-    0% { transform: translate(0,0); filter: hue-rotate(0deg); }
-    10% { transform: translate(-15px, 10px) skewX(15deg); filter: invert(1); }
-    20% { transform: translate(20px, -5px); background: var(--err); }
+    0% { transform: translate(0,0); }
+    10% { transform: translate(-10px, 5px) skewX(5deg); filter: invert(0.5); }
+    90% { transform: translate(10px, -5px); }
     100% { transform: translate(0,0); }
 }
 .shake-active { animation: mega-shake 0.05s infinite !important; }
 
 .btn-ui { 
     background: rgba(0, 229, 255, 0.05); border: 1px solid var(--p); color: var(--p); 
-    padding: 15px; font-family: var(--font); font-size: 9px; cursor: inherit;
+    padding: 12px; font-family: var(--font); font-size: 9px; cursor: inherit;
     transition: all 0.2s; text-transform: uppercase;
 }
-.btn-ui:hover { background: var(--p); color: #000; box-shadow: 0 0 20px var(--p); }
+.btn-ui:hover { background: var(--p); color: #000; }
 
-#action-loader, #day-init-overlay, #shutdown-screen {
-    position: fixed; inset: 0; background: #000; z-index: 2000000;
-    display: none; flex-direction: column; justify-content: center; align-items: center;
-}
-
-/* El overlay de "Iniciando Día" ahora tiene prioridad z-index */
-#day-init-overlay { z-index: 3000000; }
-
+/* CAPAS CRÍTICAS */
+#action-loader, #shutdown-screen { position: fixed; inset: 0; background: #000; z-index: 5000000; display: none; flex-direction: column; justify-content: center; align-items: center; }
+#day-init-overlay { position: fixed; inset: 0; background: #000; z-index: 8000000; display: none; flex-direction: column; justify-content: center; align-items: center; }
+#glitch-overlay { position: fixed; inset: 0; z-index: 7000000; background:#000; display: none; }
 #menu-p { position: fixed; inset: 0; background: rgba(0,0,0,0.98); z-index: 10000000; display: none; padding: 40px; overflow-y: auto; }
+
 .p-container { max-width: 800px; margin: auto; background: #0a0c10; padding: 35px; border-left: 8px solid var(--p); }
-input, textarea { width: 100%; background: #000; border: 1px solid #222; color: #fff; padding: 12px; margin-bottom: 15px; font-family: var(--font); font-size: 10px; }
+input { width: 100%; background: #000; border: 1px solid #222; color: #fff; padding: 12px; margin-bottom: 10px; font-family: var(--font); font-size: 10px; }
+
+/* LAB INTERFACE STYLES */
+#lab-login { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; padding: 40px; }
+#lab-main { display: none; height: 100%; flex-direction: column; }
+.lab-grid { display: grid; grid-template-columns: 200px 1fr 200px; height: 100%; }
+.lab-panel { border: 1px solid rgba(0, 229, 255, 0.1); padding: 15px; overflow-y: auto; }
+.stat-box { margin-bottom: 15px; border-left: 2px solid var(--p); padding-left: 10px; }
 </style>
 </head>
 <body>
@@ -93,125 +89,138 @@ input, textarea { width: 100%; background: #000; border: 1px solid #222; color: 
 <div id="cursor"></div>
 
 <div id="start-screen" class="screen active" onclick="boot()">
-    <h1 id="ui-main-title" style="font-size: 45px; letter-spacing:20px; color:var(--p);"></h1>
-    <p id="ui-click-msg" style="margin-top:30px; font-size:10px; opacity:0.5;"></p>
+    <h1 id="ui-main-title" style="font-size: 40px; color:var(--p);"></h1>
+    <p id="ui-click-msg" style="margin-top:20px; font-size:10px; opacity:0.5;"></p>
 </div>
 
 <div id="boot-screen" class="screen">
     <div style="width: 300px;">
-        <div id="boot-text" style="font-size:9px; color:var(--p); margin-bottom:15px; font-family:monospace;"></div>
+        <div id="boot-text" style="font-size:9px; color:var(--p); margin-bottom:10px;"></div>
         <div style="width: 100%; height: 2px; background: rgba(0,229,255,0.1);"><div id="boot-bar" style="width:0%; height:100%; background:var(--p);"></div></div>
     </div>
 </div>
 
-<div id="day-init-overlay">
-    <h2 id="ui-day-title" style="letter-spacing:15px; color:var(--p); font-size: 35px; text-align:center;"></h2>
-    <p id="ui-day-subtitle" style="margin-top:15px; font-size:10px; opacity:0.7; text-align:center;"></p>
-</div>
-
-<div id="shutdown-screen">
-    <p id="ui-shutdown-msg" style="font-size:12px; margin-bottom:40px; color:#444; letter-spacing:8px;"></p>
-    <button class="btn-ui" id="ui-reset-btn" onclick="location.reload()"></button>
-</div>
-
 <div id="desktop" class="screen">
-    <div style="position:absolute; top:40px; left:40px; display:grid; gap:30px;">
-        <div class="icon" ondblclick="toggleWin('win-lab', true)" style="text-align:center;">
-            <div style="font-size:45px; filter: drop-shadow(0 0 10px var(--p));">☣️</div>
-            <span id="ui-icon-lab" style="font-size:8px; color:var(--p); margin-top:10px; display:block;"></span>
+    <div style="position:absolute; top:40px; left:40px;">
+        <div class="icon" ondblclick="toggleWin('win-lab', true)" style="text-align:center; cursor:inherit;">
+            <div style="font-size:45px;">☣️</div>
+            <span id="ui-icon-lab" style="font-size:8px; color:var(--p); display:block; margin-top:5px;"></span>
         </div>
     </div>
 
-    <div id="win-lab" class="win" style="width:700px; height:450px; top:10%; left:10%;">
-        <div class="win-header"><span id="ui-lab-header"></span><span onclick="toggleWin('win-lab', false)" style="color:var(--err); cursor:pointer;">[X]</span></div>
-        <div style="display:flex; flex:1; overflow:hidden;">
-            <div id="subject-list" style="width:250px; border-right:1px solid rgba(0,229,255,0.1); padding:20px; background:rgba(0,0,0,0.2);"></div>
-            <div style="flex:1; display:flex; justify-content:center; align-items:center;">
-                <button class="btn-ui" id="ui-btn-console" onclick="openTerminal()"></button>
+    <div id="win-lab" class="win" style="width:850px; height:550px; top:5%; left:5%;">
+        <div class="win-header">
+            <span id="ui-lab-header"></span>
+            <span id="lab-user-tag" style="opacity:0.5; font-size:8px;">SIN_SESION</span>
+            <span onclick="toggleWin('win-lab', false)" style="color:var(--err)">[X]</span>
+        </div>
+        
+        <div id="lab-login">
+            <div style="font-size:10px; color:var(--p); margin-bottom:20px; letter-spacing:2px;">IDENTIFICACIÓN REQUERIDA</div>
+            <input type="text" id="lab-user-name" placeholder="NOMBRE DEL CIENTÍFICO" style="width:250px; text-align:center;">
+            <input type="password" id="lab-user-key" placeholder="LLAVE MÉDICA" style="width:250px; text-align:center;">
+            <button class="btn-ui" onclick="accessLab()" style="width:250px;">REGISTRAR ACCESO</button>
+        </div>
+
+        <div id="lab-main">
+            <div class="lab-grid">
+                <div class="lab-panel" id="subject-list"></div>
+                
+                <div class="lab-panel" style="background: rgba(0,0,0,0.3);">
+                    <div style="font-size:9px; color:var(--p); margin-bottom:20px; border-bottom:1px solid var(--p);">ANÁLISIS DE TEJIDO_01</div>
+                    <div id="lab-vital-stats">
+                        <div class="stat-box"><small>ESTABILIDAD CELULAR</small><br>98.4%</div>
+                        <div class="stat-box"><small>ACTIVIDAD NEURONAL</small><br>CRÍTICA</div>
+                        <div class="stat-box"><small>NIVEL DE SEDACIÓN</small><br>10%</div>
+                    </div>
+                    <div style="margin-top:40px; display:flex; flex-direction:column; gap:10px;">
+                        <button class="btn-ui" onclick="sfx(200,'sine',0.2,0.1)">INYECTAR_SUERO</button>
+                        <button class="btn-ui" onclick="sfx(100,'square',0.5,0.1)">RESETEAR_SIGNOS</button>
+                    </div>
+                </div>
+
+                <div class="lab-panel" style="display:flex; flex-direction:column; justify-content:center; align-items:center;">
+                    <div style="font-size:8px; text-align:center; margin-bottom:20px; opacity:0.6;">ACCESO AL NÚCLEO</div>
+                    <button class="btn-ui" id="ui-btn-console" onclick="openTerminal()"></button>
+                </div>
             </div>
         </div>
     </div>
 
     <div id="win-con" class="win">
-        <div class="win-header">
-            <span>KERNEL_TERMINAL // SESSION: ROOT</span>
-            <span onclick="toggleWin('win-con', false)" style="color:var(--err); cursor:pointer;">[X]</span>
-        </div>
+        <div class="win-header"><span>ROOT_TERMINAL</span><span onclick="toggleWin('win-con', false)" style="color:var(--err)">[X]</span></div>
         <div id="con-log"></div>
-        <div id="con-input-area" style="padding:20px; background: #05070a;">
-            <input type="password" id="con-pass" placeholder="LLAVE_DE_ACCESO" onkeydown="checkPass(event)" style="text-align:center; margin:0;">
+        <div id="con-input-area" style="padding:20px; background:#05070a;">
+            <input type="password" id="con-pass" placeholder="PASSWORD" onkeydown="checkPass(event)">
         </div>
-        <div id="con-btns" style="display:none; grid-template-columns: repeat(3, 1fr); gap:15px; padding:20px; background:#080b10;">
-            <button class="btn-ui" onclick="execAction('OPT')">OPTIMIZAR</button>
-            <button class="btn-ui" onclick="execAction('PRG')">PURGAR</button>
-            <button class="btn-ui" onclick="execAction('CLP')">COLAPSAR</button>
+        <div id="con-btns" style="display:none; grid-template-columns: 1fr 1fr 1fr; gap:10px; padding:20px;">
+            <button class="btn-ui" onclick="execAction()">OPTIMIZAR</button>
+            <button class="btn-ui" onclick="execAction()">PURGAR</button>
+            <button class="btn-ui" onclick="execAction()">COLAPSAR</button>
         </div>
     </div>
 </div>
 
 <div id="action-loader">
-    <div id="ui-proc-msg" style="font-size:11px; color:var(--p); margin-bottom:20px; letter-spacing:10px;"></div>
-    <div id="loader-container" style="width: 300px; height: 3px; background: rgba(0,229,255,0.1); position:relative;">
-        <div id="load-fill" style="width:0%; height:100%; background:var(--p); box-shadow:0 0 15px var(--p);"></div>
+    <div id="ui-proc-msg" style="font-size:10px; color:var(--p); margin-bottom:20px;"></div>
+    <div style="width:300px; height:3px; background:rgba(0,229,255,0.1);"><div id="load-fill" style="width:0%; height:100%; background:var(--p);"></div></div>
+</div>
+
+<div id="glitch-overlay">
+    <div id="glitch-rain" style="position:absolute; inset:0; font-family:monospace; font-size:10px; color:#0f0; opacity:0.3; word-break:break-all;"></div>
+    <div style="position:relative; z-index:10; display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%;">
+        <div style="font-size:100px; transform:rotate(90deg); color:var(--err);">:)</div>
+        <div id="glitch-msg-ui" style="font-size:30px; color:#fff; margin-top:20px;"></div>
     </div>
 </div>
 
-<div id="glitch-overlay" style="display:none; position:fixed; inset:0; z-index:9000000; background:#000; overflow:hidden;">
-    <div id="glitch-code-rain" style="position:absolute; inset:0; font-family:monospace; font-size:10px; color:#0f0; opacity:0.4; pointer-events:none; word-break:break-all;"></div>
-    <div style="position:relative; z-index:10; display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%;">
-        <div style="font-size:120px; transform: rotate(90deg); color:var(--err); text-shadow: 5px 0 var(--p);">:)</div>
-        <div id="glitch-msg-ui" style="font-size:40px; letter-spacing:10px; color:#fff; font-weight:bold; margin-top:20px;"></div>
-    </div>
+<div id="day-init-overlay">
+    <h2 id="ui-day-title" style="color:var(--p); font-size:30px; letter-spacing:10px;"></h2>
+    <p id="ui-day-subtitle" style="margin-top:10px; font-size:10px; opacity:0.7;"></p>
+</div>
+
+<div id="shutdown-screen">
+    <p id="ui-shutdown-msg" style="font-size:12px; margin-bottom:30px; color:#444;"></p>
+    <button class="btn-ui" id="ui-reset-btn" onclick="location.reload()" style="z-index:9000000; position:relative;"></button>
 </div>
 
 <div id="menu-p">
     <div class="p-container">
-        <h2 style="font-size:14px; color:var(--p); margin-bottom:25px;">SISTEMA_CONFIG</h2>
-        <div class="p-grid" style="display:grid; grid-template-columns:1fr 1fr; gap:20px;">
+        <h2 style="color:var(--p); margin-bottom:20px;">CONFIG_PANEL</h2>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px;">
             <div>
                 <label>Color P</label><input type="color" id="cfg-p-color">
                 <label>Fondo</label><input type="color" id="cfg-bg-color">
                 <label>Título</label><input type="text" id="cfg-title">
-                <label>Inicio</label><input type="text" id="cfg-click">
-                <label>User ID</label><input type="text" id="cfg-sci">
+                <label>Click</label><input type="text" id="cfg-click">
+                <label>ID</label><input type="text" id="cfg-sci">
                 <label>Pass</label><input type="text" id="cfg-pass">
             </div>
             <div>
-                <label>Recuperación Título</label><input type="text" id="cfg-day-t">
-                <label>Recuperación Sub</label><input type="text" id="cfg-day-st">
-                <label>Panic Msg</label><input type="text" id="cfg-glitch">
-                <label>Texto Carga</label><input type="text" id="cfg-proc">
+                <label>Día Tit</label><input type="text" id="cfg-day-t">
+                <label>Día Sub</label><input type="text" id="cfg-day-st">
+                <label>Panic</label><input type="text" id="cfg-glitch">
+                <label>Carga</label><input type="text" id="cfg-proc">
                 <label>Off Msg</label><input type="text" id="cfg-sh-msg">
-                <label>Reboot Btn</label><input type="text" id="cfg-sh-btn">
+                <label>Reset</label><input type="text" id="cfg-sh-btn">
             </div>
         </div>
-        <textarea id="cfg-errors" rows="2" style="margin-top:10px;"></textarea>
-        <button class="btn-ui" style="width:100%; margin-top:20px;" onclick="apply()">COMMIT_CHANGES</button>
+        <button class="btn-ui" style="width:100%; margin-top:20px;" onclick="apply()">GUARDAR Y SINCRONIZAR</button>
     </div>
 </div>
 
 <script>
 const AC = new (window.AudioContext || window.webkitAudioContext)();
 let config = {
-    pColor: "#00e5ff", bgColor: "#010204",
-    title: "VOID_CORE", clickMsg: "INICIALIZAR_SISTEMA",
-    pass: "1234", sci: "NUCLEO_7",
-    dayTitle: "INICIANDO DIA", daySubtitle: "Ciclo de datos estabilizado...",
-    labName: "AREA_EXPERIMENTAL", glitch: "COLAPSO_INMINENTE", proc: "PROCESANDO_LLAVE...",
-    shMsg: "SISTEMA_OFFLINE", shBtn: "REINICIAR_BUCLE",
-    errors: "FATAL_ERROR, MEMORY_CORRUPT, VOID_OVERFLOW, BYPASS_ERR, KERNEL_HALT",
-    bootLogs: ["> INIT_CORE...", "> AUTH_USER...", "> READY."]
+    pColor: "#00e5ff", bgColor: "#010204", title: "VOID_CORE", clickMsg: "INICIALIZAR",
+    pass: "1234", sci: "USER_7", dayTitle: "INICIANDO DIA", daySubtitle: "Restaurando...",
+    labName: "AREA_EXPERIMENTAL", glitch: "SISTEMA_CORRUPTO", proc: "CARGANDO...",
+    shMsg: "SISTEMA_OFFLINE", shBtn: "REINICIAR",
+    errors: "FATAL_ERR, MEMORY_LEAK, NULL_REF, KERNEL_PANIC"
 };
 
 function sfx(f, t, d, v) {
-    try {
-        const o = AC.createOscillator(), g = AC.createGain();
-        o.type = t; o.frequency.setValueAtTime(f, AC.currentTime);
-        g.gain.setValueAtTime(v, AC.currentTime);
-        g.gain.exponentialRampToValueAtTime(0.001, AC.currentTime + d);
-        o.connect(g); g.connect(AC.destination);
-        o.start(); o.stop(AC.currentTime + d);
-    } catch(e) {}
+    try { const o = AC.createOscillator(), g = AC.createGain(); o.type = t; o.frequency.setValueAtTime(f, AC.currentTime); g.gain.setValueAtTime(v, AC.currentTime); g.gain.exponentialRampToValueAtTime(0.001, AC.currentTime + d); o.connect(g); g.connect(AC.destination); o.start(); o.stop(AC.currentTime + d); } catch(e) {}
 }
 
 function syncUI() {
@@ -223,17 +232,15 @@ function syncUI() {
     document.getElementById('ui-day-subtitle').innerText = config.daySubtitle;
     document.getElementById('ui-icon-lab').innerText = config.labName;
     document.getElementById('ui-lab-header').innerText = config.labName;
-    document.getElementById('ui-btn-console').innerText = "ACCEDER_TERMINAL";
+    document.getElementById('ui-btn-console').innerText = "ACCESO_ROOT";
     document.getElementById('ui-proc-msg').innerText = config.proc;
     document.getElementById('glitch-msg-ui').innerText = config.glitch;
     document.getElementById('ui-shutdown-msg').innerText = config.shMsg;
     document.getElementById('ui-reset-btn').innerText = config.shBtn;
     
     const sl = document.getElementById('subject-list');
-    sl.innerHTML = "";
-    for(let i=1; i<=5; i++) {
-        sl.innerHTML += `<div style="margin-bottom:20px; font-size:9px;">SUJETO_X${i} <div style="height:3px; background:#111; margin-top:8px;"><div style="width:${Math.random()*100}%; height:100%; background:var(--p);"></div></div></div>`;
-    }
+    sl.innerHTML = "<div style='font-size:8px; margin-bottom:15px; opacity:0.5'>SUJETOS_MONITOREADOS</div>";
+    for(let i=1; i<=6; i++) sl.innerHTML += `<div style="font-size:9px; margin-bottom:15px;">OBJETO_X0${i} <div style="height:2px; background:#111; margin-top:5px;"><div style="width:${Math.random()*100}%; height:100%; background:var(--p);"></div></div></div>`;
 }
 
 async function boot() {
@@ -241,96 +248,79 @@ async function boot() {
     document.getElementById('start-screen').classList.remove('active');
     document.getElementById('boot-screen').classList.add('active');
     const b = document.getElementById('boot-text');
-    for(let l of config.bootLogs) { 
-        b.innerHTML += `<div>${l}</div>`; sfx(400, 'sine', 0.1, 0.05); 
-        await new Promise(r => setTimeout(r, 600)); 
-    }
+    for(let l of ["> CARGANDO...", "> VERIFICANDO...", "> OK."]) { b.innerHTML += `<div>${l}</div>`; sfx(400,'sine',0.1,0.05); await new Promise(r=>setTimeout(r,500)); }
     document.getElementById('boot-bar').style.width = "100%";
-    await new Promise(r => setTimeout(r, 800));
+    await new Promise(r=>setTimeout(r,600));
     document.getElementById('boot-screen').classList.remove('active');
     document.getElementById('desktop').classList.add('active');
 }
 
-function openTerminal() {
-    toggleWin('win-lab', false);
-    toggleWin('win-con', true);
+/* LÓGICA DE LABORATORIO */
+function accessLab() {
+    const user = document.getElementById('lab-user-name').value;
+    const key = document.getElementById('lab-user-key').value;
+    if(user.length > 2 && key === config.pass) {
+        sfx(600, 'sine', 0.5, 0.1);
+        document.getElementById('lab-login').style.display = 'none';
+        document.getElementById('lab-main').style.display = 'flex';
+        document.getElementById('lab-user-tag').innerText = `ID: ${user.toUpperCase()}`;
+    } else {
+        sfx(100, 'sawtooth', 0.3, 0.1);
+        alert("CREDENCIALES INVÁLIDAS");
+    }
 }
+
+function openTerminal() { toggleWin('win-lab', false); toggleWin('win-con', true); }
 
 function checkPass(e) {
     if(e.key === 'Enter') {
         if(e.target.value === config.pass) {
-            document.getElementById('con-log').innerHTML = `<div style="color:var(--p); padding-bottom:10px;">> ACCESO_CONCEDIDO: ${config.sci}</div>`;
+            document.getElementById('con-log').innerHTML = `<div style="color:var(--p)">> SESION_INICIADA: ${config.sci}</div>`;
             document.getElementById('con-input-area').style.display = 'none';
             document.getElementById('con-btns').style.display = 'grid';
-            sfx(800, 'sine', 0.2, 0.05);
-        } else {
-            sfx(100, 'sawtooth', 0.3, 0.1);
-        }
+            sfx(800,'sine',0.2,0.05);
+        } else sfx(100,'sawtooth',0.3,0.1);
         e.target.value = "";
     }
 }
 
-// MEJORA: Corrupción desde la barra de carga
-async function execAction(name) {
+async function execAction() {
     const loader = document.getElementById('action-loader');
     const fill = document.getElementById('load-fill');
-    const procMsg = document.getElementById('ui-proc-msg');
     loader.style.display = 'flex';
-    
-    for(let i=0; i<=100; i += Math.random() * 8) {
+    for(let i=0; i<=100; i += Math.random() * 10) {
         if(i > 70) { 
-            // Inicia corrupción visual en la barra
-            fill.style.background = (Math.random() > 0.5) ? 'var(--err)' : 'white';
-            fill.style.boxShadow = `0 0 30px var(--err)`;
-            procMsg.innerText = "ERROR_DATA_CORRUPTION_" + Math.random().toString(16).slice(2,6);
-            document.body.classList.add('shake-active');
+            document.body.classList.add('shake-active'); 
+            fill.style.background = (Math.random() > 0.5) ? 'var(--err)' : '#fff';
             sfx(Math.random()*1000, 'sawtooth', 0.05, 0.05);
         }
         fill.style.width = Math.min(i, 100) + '%';
         await new Promise(r => setTimeout(r, 80));
     }
-    
     loader.style.display = 'none';
-    triggerEpicGlitch();
+    triggerFinalGlitch();
 }
 
-async function triggerEpicGlitch() {
-    const log = document.getElementById('con-log');
-    const rain = document.getElementById('glitch-code-rain');
+async function triggerFinalGlitch() {
     const gl = document.getElementById('glitch-overlay');
-    
+    const rain = document.getElementById('glitch-rain');
     gl.style.display = 'block';
-    sfx(40, 'square', 4, 0.3);
-
-    // Lluvia de código y caos en terminal
-    const rainInt = setInterval(() => {
-        rain.innerText += Math.random().toString(36);
-        const div = document.createElement('div');
-        div.style.color = 'var(--err)';
-        div.innerText = "OVERFLOW_ERROR_0x" + Math.random().toString(16).slice(2,8);
-        log.appendChild(div);
-        log.scrollTop = log.scrollHeight;
-    }, 20);
-
-    await new Promise(r => setTimeout(r, 2500));
-    clearInterval(rainInt);
-    
+    sfx(40, 'square', 3, 0.3);
+    const int = setInterval(() => { rain.innerText += Math.random().toString(36); }, 20);
+    await new Promise(r => setTimeout(r, 2000));
+    clearInterval(int);
     gl.style.background = "#fff";
     sfx(2000, 'sine', 0.1, 0.5);
-    await new Promise(r => setTimeout(r, 100));
+    await new Promise(r => setTimeout(r, 150));
     gl.style.background = "#000";
     gl.innerHTML = "";
     document.body.classList.remove('shake-active');
-    
-    await new Promise(r => setTimeout(r, 1000));
-    
-    // SECUENCIA FINAL: INICIANDO DIA
-    const dayScr = document.getElementById('day-init-overlay');
-    dayScr.style.display = 'flex';
+    await new Promise(r => setTimeout(r, 800));
+    const day = document.getElementById('day-init-overlay');
+    day.style.display = 'flex';
     sfx(600, 'sine', 1, 0.1);
-    await new Promise(r => setTimeout(r, 3500));
-    dayScr.style.display = 'none';
-    
+    await new Promise(r => setTimeout(r, 3000));
+    day.style.display = 'none';
     document.getElementById('shutdown-screen').style.display = 'flex';
 }
 
@@ -347,33 +337,29 @@ function apply() {
     config.proc = document.getElementById('cfg-proc').value;
     config.shMsg = document.getElementById('cfg-sh-msg').value;
     config.shBtn = document.getElementById('cfg-sh-btn').value;
-    config.errors = document.getElementById('cfg-errors').value;
     syncUI();
     togglePanel(false);
-}
-
-function loadPanel() {
-    document.getElementById('cfg-p-color').value = config.pColor;
-    document.getElementById('cfg-bg-color').value = config.bgColor;
-    document.getElementById('cfg-title').value = config.title;
-    document.getElementById('cfg-click').value = config.clickMsg;
-    document.getElementById('cfg-sci').value = config.sci;
-    document.getElementById('cfg-pass').value = config.pass;
-    document.getElementById('cfg-day-t').value = config.dayTitle;
-    document.getElementById('cfg-day-st').value = config.daySubtitle;
-    document.getElementById('cfg-glitch').value = config.glitch;
-    document.getElementById('cfg-proc').value = config.proc;
-    document.getElementById('cfg-sh-msg').value = config.shMsg;
-    document.getElementById('cfg-sh-btn').value = config.shBtn;
-    document.getElementById('cfg-errors').value = config.errors;
 }
 
 function togglePanel(force) {
     const p = document.getElementById('menu-p');
     const isShowing = force !== undefined ? force : p.style.display !== 'flex';
     p.style.display = isShowing ? 'flex' : 'none';
-    if(isShowing) { document.body.classList.add('show-real-cursor'); loadPanel(); }
-    else document.body.classList.remove('show-real-cursor');
+    if(isShowing) {
+        document.body.classList.add('show-real-cursor');
+        document.getElementById('cfg-p-color').value = config.pColor;
+        document.getElementById('cfg-bg-color').value = config.bgColor;
+        document.getElementById('cfg-title').value = config.title;
+        document.getElementById('cfg-click').value = config.clickMsg;
+        document.getElementById('cfg-sci').value = config.sci;
+        document.getElementById('cfg-pass').value = config.pass;
+        document.getElementById('cfg-day-t').value = config.dayTitle;
+        document.getElementById('cfg-day-st').value = config.daySubtitle;
+        document.getElementById('cfg-glitch').value = config.glitch;
+        document.getElementById('cfg-proc').value = config.proc;
+        document.getElementById('cfg-sh-msg').value = config.shMsg;
+        document.getElementById('cfg-sh-btn').value = config.shBtn;
+    } else document.body.classList.remove('show-real-cursor');
 }
 
 document.addEventListener('mousemove', (e) => {
