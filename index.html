@@ -2,375 +2,805 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>VOID_SYSTEM // LAB_MASTER_EDITION</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Share+Tech+Mono&display=swap" rel="stylesheet">
 <style>
-@import url('https://fonts.cdnfonts.com/css/minecraftia');
+:root{--p:#00e5ff;--bg:#010204;--err:#ff0055;--ok:#00ff88;--win:rgba(7,10,15,0.97);--font:'Press Start 2P',monospace;}
+*{box-sizing:border-box;outline:none;margin:0;padding:0;user-select:none;}
+html,body{background:var(--bg);color:#f0f0f0;font-family:var(--font);height:100vh;overflow:hidden;cursor:none;}
 
-:root {
-    --p: #00e5ff; 
-    --p-glow: rgba(0, 229, 255, 0.4);
-    --bg: #010204; 
-    --err: #ff0055; 
-    --win: rgba(7, 10, 15, 0.98); 
-    --font: 'Minecraftia', sans-serif;
-}
+/* CURSOR */
+#cur{position:fixed;width:20px;height:20px;pointer-events:none;z-index:9999999;transform:translate(-2px,-2px);transition:transform .06s;}
+#cur svg{width:20px;height:20px;filter:drop-shadow(0 0 6px var(--p));}
+#cur-sym{position:fixed;font-size:18px;color:var(--p);pointer-events:none;z-index:9999999;display:none;transform:translate(-50%,-50%);text-shadow:0 0 12px var(--p);line-height:1;font-family:'Press Start 2P',monospace;}
+#cur-trail{position:fixed;inset:0;pointer-events:none;z-index:9999990;}
+.tdot{position:absolute;width:5px;height:5px;border-radius:0;background:var(--p);pointer-events:none;opacity:.7;transition:opacity .4s;transform:translate(-50%,-50%);}
 
-* { box-sizing: border-box; outline: none; margin: 0; padding: 0; user-select: none; }
-body, html { 
-    background: var(--bg); color: #f0f0f0; font-family: var(--font); 
-    height: 100vh; overflow: hidden; image-rendering: pixelated;
-    cursor: none;
-}
+/* HINT [P] esquina */
+#p-hint{position:fixed;bottom:48px;right:14px;font-size:7px;color:rgba(0,229,255,.35);letter-spacing:2px;pointer-events:none;z-index:8000;font-family:'Press Start 2P',monospace;line-height:2;}
+#p-hint span{border:1px solid rgba(0,229,255,.25);padding:2px 5px;}
 
-body.show-real-cursor { cursor: auto !important; }
+/* SCREENS */
+.screen{position:fixed;inset:0;display:none;flex-direction:column;justify-content:center;align-items:center;z-index:100;}
+.screen.active{display:flex;}
 
-#cursor {
-    width: 24px; height: 24px; background: transparent;
-    position: fixed; pointer-events: none; z-index: 20000000;
-    border: 2px solid var(--p); box-shadow: 0 0 20px var(--p-glow);
-    display: flex; align-items: center; justify-content: center;
-    transform: translate(-50%, -50%); will-change: transform;
-}
-#cursor::after { content: ''; width: 4px; height: 4px; background: white; border-radius: 50%; }
+/* START */
+#start-screen{background:radial-gradient(ellipse at center,#020810 0%,#000 100%);}
+#start-screen::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,229,255,.02) 2px,rgba(0,229,255,.02) 4px);pointer-events:none;}
+.start-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(0,229,255,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(0,229,255,.025) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;}
+.start-title{font-size:clamp(14px,4vw,38px);color:var(--p);letter-spacing:4px;text-shadow:0 0 30px var(--p);animation:pglow 2.5s infinite;text-align:center;line-height:1.6;}
+@keyframes pglow{0%,100%{text-shadow:0 0 20px var(--p)}50%{text-shadow:0 0 50px var(--p),0 0 80px rgba(0,229,255,.3)}}
+.start-sub{font-size:clamp(7px,1.2vw,10px);opacity:.4;margin-top:24px;letter-spacing:4px;animation:blink3 1.4s infinite;}
+@keyframes blink3{0%,100%{opacity:.4}50%{opacity:.1}}
 
-.screen { position: fixed; inset: 0; display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 100; }
-.screen.active { display: flex; }
+/* BOOT */
+#boot-screen{background:#000;justify-content:flex-start;align-items:flex-start;padding:clamp(16px,3vw,40px);}
+.boot-logo{font-size:clamp(8px,1.4vw,11px);color:var(--p);margin-bottom:14px;opacity:0;transition:opacity .4s;letter-spacing:2px;}
+.boot-line{font-size:clamp(7px,1.1vw,10px);color:#888;line-height:2.2;opacity:0;transition:opacity .12s;}
+.boot-line.show{opacity:1;}
+.bok{color:var(--ok);}
+.berr{color:var(--err);}
+.bbar-wrap{width:clamp(180px,38vw,320px);height:3px;background:rgba(0,229,255,.1);margin-top:14px;}
+.bbar{height:100%;background:var(--p);width:0%;box-shadow:0 0 8px var(--p);}
 
-.win { 
-    background: var(--win); border: 1px solid rgba(0, 229, 255, 0.3); 
-    display: none; position: absolute; z-index: 500; flex-direction: column;
-    border-radius: 2px; overflow: hidden; backdrop-filter: blur(15px);
-}
+/* DESKTOP */
+#desktop{background:#001515;justify-content:flex-start;align-items:flex-start;}
+.desktop-bg{position:absolute;inset:0;background:radial-gradient(ellipse at 20% 80%,rgba(0,40,30,.5) 0%,transparent 60%);pointer-events:none;}
+.taskbar{position:absolute;bottom:0;left:0;right:0;height:36px;background:rgba(0,0,0,.96);border-top:1px solid rgba(0,229,255,.15);display:flex;align-items:center;padding:0 12px;gap:10px;z-index:500;}
+.tbar-btn{font-family:var(--font);font-size:8px;color:var(--p);background:transparent;border:1px solid rgba(0,229,255,.2);padding:4px 10px;cursor:none;transition:background .2s;}
+.tbar-btn:hover{background:rgba(0,229,255,.08);}
+.tbar-time{margin-left:auto;font-size:8px;color:rgba(0,229,255,.4);letter-spacing:2px;}
+.d-icon{position:absolute;top:20px;left:20px;display:flex;flex-direction:column;align-items:center;gap:6px;cursor:none;padding:10px;border:1px solid transparent;transition:border .2s;}
+.d-icon:hover{border-color:rgba(0,229,255,.25);background:rgba(0,229,255,.04);}
+.d-icon-g{font-size:36px;filter:drop-shadow(0 0 8px var(--p));}
+.d-icon-l{font-size:7px;color:var(--p);letter-spacing:1px;text-align:center;line-height:1.8;}
 
-.win-header { 
-    padding: 12px 15px; background: rgba(255,255,255,0.03); 
-    border-bottom: 1px solid rgba(0, 229, 255, 0.2);
-    display: flex; justify-content: space-between; font-size: 10px; color: var(--p);
-}
+/* WINDOW */
+.win-overlay{position:fixed;inset:0;display:none;align-items:center;justify-content:center;z-index:600;}
+.win-overlay.open{display:flex;}
+.window{background:var(--win);border:1px solid rgba(0,229,255,.25);display:flex;flex-direction:column;width:clamp(300px,90vw,920px);max-height:92vh;box-shadow:0 0 40px rgba(0,229,255,.08);animation:wopen .18s ease-out;}
+@keyframes wopen{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:scale(1)}}
+.win-tb{background:linear-gradient(90deg,rgba(0,229,255,.1),rgba(0,229,255,.03));border-bottom:1px solid rgba(0,229,255,.15);padding:10px 14px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.win-title{font-size:clamp(7px,1vw,9px);color:var(--p);letter-spacing:2px;}
+.win-x{color:var(--err);font-size:9px;cursor:none;padding:3px 8px;border:1px solid rgba(255,0,85,.25);transition:background .2s;font-family:var(--font);}
+.win-x:hover{background:rgba(255,0,85,.12);}
+.win-mb{display:flex;border-bottom:1px solid rgba(0,229,255,.08);flex-shrink:0;}
+.win-mi{font-size:8px;color:rgba(255,255,255,.4);padding:8px 14px;cursor:none;transition:background .2s;}
+.win-mi:hover{background:rgba(0,229,255,.06);color:var(--p);}
+.win-body{padding:clamp(10px,2vw,18px);overflow-y:auto;flex:1;}
 
-/* TERMINAL */
-#win-con { width: 700px; height: 500px; top: 50%; left: 50%; transform: translate(-50%, -50%); border: 2px solid var(--p); }
-#con-log { background: #000; flex: 1; padding: 20px; font-size: 10px; color: #0f0; overflow-y: auto; font-family: monospace; }
+/* LAB */
+.lab-grid{display:grid;grid-template-columns:190px 1fr 170px;flex:1;overflow:hidden;min-height:0;}
+@media(max-width:580px){.lab-grid{grid-template-columns:1fr;}}
+.lab-panel{border-right:1px solid rgba(0,229,255,.07);padding:14px;overflow-y:auto;}
+.lab-panel:last-child{border-right:none;}
+.lab-pt{font-size:7px;color:rgba(0,229,255,.45);letter-spacing:2px;margin-bottom:12px;border-bottom:1px solid rgba(0,229,255,.08);padding-bottom:6px;}
+.stat-row{margin-bottom:14px;}
+.stat-label{font-size:7px;color:rgba(255,255,255,.3);letter-spacing:1px;margin-bottom:4px;}
+.stat-val{font-size:12px;color:var(--p);}
+.stat-bar{height:2px;background:rgba(0,229,255,.1);margin-top:5px;}
+.stat-bf{height:100%;background:var(--p);box-shadow:0 0 4px var(--p);}
+.lab-log{background:#000;border:1px solid rgba(0,229,255,.1);padding:8px;height:clamp(60px,12vh,100px);overflow-y:auto;margin:10px 0;}
+.llog-line{font-size:7px;color:#00ff88;line-height:2;}
+.llog-line.e{color:var(--err);}
+.llog-line.w{color:#ffaa00;}
 
-@keyframes mega-shake {
-    0% { transform: translate(0,0); }
-    10% { transform: translate(-10px, 5px) skewX(5deg); filter: invert(0.5); }
-    90% { transform: translate(10px, -5px); }
-    100% { transform: translate(0,0); }
-}
-.shake-active { animation: mega-shake 0.05s infinite !important; }
+/* BUTTONS */
+.btn{font-family:var(--font);font-size:clamp(7px,1vw,9px);background:rgba(0,229,255,.04);border:1px solid rgba(0,229,255,.28);color:var(--p);padding:clamp(8px,1.4vw,11px) clamp(10px,2vw,16px);cursor:none;letter-spacing:1px;transition:background .2s,box-shadow .2s;text-transform:uppercase;line-height:1.5;}
+.btn:hover{background:rgba(0,229,255,.1);box-shadow:0 0 14px rgba(0,229,255,.12);}
+.btn.red{border-color:rgba(255,0,85,.35);color:var(--err);background:rgba(255,0,85,.04);}
+.btn.red:hover{background:rgba(255,0,85,.1);}
+.btn.ok{border-color:rgba(0,255,136,.35);color:var(--ok);background:rgba(0,255,136,.04);}
+.btn.ok:hover{background:rgba(0,255,136,.1);}
+.btn-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;}
 
-.btn-ui { 
-    background: rgba(0, 229, 255, 0.05); border: 1px solid var(--p); color: var(--p); 
-    padding: 12px; font-family: var(--font); font-size: 9px; cursor: inherit;
-    transition: all 0.2s; text-transform: uppercase;
-}
-.btn-ui:hover { background: var(--p); color: #000; }
+/* CONSOLE */
+.con-body{background:#000;padding:14px;font-family:'Share Tech Mono',monospace;height:clamp(180px,38vh,340px);overflow-y:auto;display:flex;flex-direction:column;}
+.con-out{flex:1;overflow-y:auto;}
+.con-line{font-size:clamp(9px,1.3vw,11px);color:#00ff88;line-height:1.9;font-family:'Share Tech Mono',monospace;}
+.con-line.e{color:var(--err);}
+.con-line.s{color:#00aaff;}
+.con-ir{display:flex;align-items:center;gap:8px;margin-top:8px;border-top:1px solid rgba(0,255,136,.1);padding-top:8px;flex-shrink:0;}
+.con-prompt{font-size:11px;color:#00ff88;white-space:nowrap;font-family:'Share Tech Mono',monospace;}
+.con-input{background:transparent;border:none;color:#00ff88;font-family:'Share Tech Mono',monospace;font-size:11px;flex:1;caret-color:#00ff88;cursor:none;}
 
-/* CAPAS CRÍTICAS */
-#action-loader, #shutdown-screen { position: fixed; inset: 0; background: #000; z-index: 5000000; display: none; flex-direction: column; justify-content: center; align-items: center; }
-#day-init-overlay { position: fixed; inset: 0; background: #000; z-index: 8000000; display: none; flex-direction: column; justify-content: center; align-items: center; }
-#glitch-overlay { position: fixed; inset: 0; z-index: 7000000; background:#000; display: none; }
-#menu-p { position: fixed; inset: 0; background: rgba(0,0,0,0.98); z-index: 10000000; display: none; padding: 40px; overflow-y: auto; }
+/* LOADER */
+#action-loader{position:fixed;inset:0;background:#000;z-index:5000000;display:none;flex-direction:column;align-items:center;justify-content:center;gap:20px;}
+.ldr-msg{font-size:clamp(9px,1.5vw,11px);color:var(--p);letter-spacing:3px;}
+.ldr-wrap{width:clamp(200px,40vw,360px);height:3px;background:rgba(0,229,255,.1);}
+.ldr-bar{height:100%;background:var(--p);width:0%;box-shadow:0 0 10px var(--p);}
+.ldr-pct{font-size:9px;color:rgba(0,229,255,.5);}
 
-.p-container { max-width: 800px; margin: auto; background: #0a0c10; padding: 35px; border-left: 8px solid var(--p); }
-input { width: 100%; background: #000; border: 1px solid #222; color: #fff; padding: 12px; margin-bottom: 10px; font-family: var(--font); font-size: 10px; }
+/* GLITCH */
+#glitch-overlay{position:fixed;inset:0;z-index:7000000;background:#000;display:none;overflow:hidden;}
+.g-rain{position:absolute;inset:0;font-family:'Share Tech Mono',monospace;font-size:10px;color:#0f0;opacity:.22;word-break:break-all;overflow:hidden;}
+.g-center{position:relative;z-index:10;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:clamp(14px,3vw,28px);}
+.g-face{font-size:clamp(50px,12vw,110px);transform:rotate(90deg);color:var(--err);animation:fglitch .15s infinite;opacity:0;transition:opacity .5s;font-family:'Press Start 2P',monospace;}
+@keyframes fglitch{0%{text-shadow:0 0 20px var(--err),4px 0 #00ffff,-4px 0 #ff00ff}50%{text-shadow:0 0 30px var(--err),-6px 0 #00ffff,6px 0 #ff00ff}100%{text-shadow:0 0 20px var(--err),4px 0 #00ffff,-4px 0 #ff00ff}}
+.g-txt{font-size:clamp(9px,2vw,16px);color:#fff;letter-spacing:4px;text-align:center;max-width:90vw;min-height:40px;font-family:'Press Start 2P',monospace;line-height:2;}
+.g-txt span{display:inline-block;animation:cvib .08s infinite alternate;}
+@keyframes cvib{from{transform:translate(0,0)}to{transform:translate(1px,1px)}}
+.g-sub{font-size:clamp(7px,1.2vw,10px);color:rgba(255,0,85,.7);letter-spacing:3px;text-align:center;max-width:80vw;font-family:'Press Start 2P',monospace;line-height:2;opacity:0;transition:opacity 1s;margin-top:10px;}
+.g-count{font-size:clamp(30px,8vw,80px);color:rgba(255,255,255,.08);font-family:'Press Start 2P',monospace;position:absolute;bottom:60px;right:clamp(20px,4vw,80px);letter-spacing:4px;}
+.scanlines{position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.28) 2px,rgba(0,0,0,.28) 4px);pointer-events:none;z-index:5;}
+.rgb{position:absolute;inset:0;pointer-events:none;z-index:6;animation:rgbanim .1s infinite;}
+@keyframes rgbanim{0%{box-shadow:inset 4px 0 0 rgba(255,0,0,.15),inset -4px 0 0 rgba(0,255,255,.15)}50%{box-shadow:inset -6px 0 0 rgba(255,0,0,.2),inset 6px 0 0 rgba(0,255,255,.2)}100%{box-shadow:inset 4px 0 0 rgba(255,0,0,.15),inset -4px 0 0 rgba(0,255,255,.15)}}
+/* Glitch horizontal tearing */
+.g-tear{position:absolute;left:0;right:0;height:3px;background:rgba(0,229,255,.6);pointer-events:none;z-index:8;display:none;}
+.g-block{position:absolute;height:8px;background:rgba(255,0,85,.5);pointer-events:none;z-index:9;}
 
-/* LAB INTERFACE STYLES */
-#lab-login { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; padding: 40px; }
-#lab-main { display: none; height: 100%; flex-direction: column; }
-.lab-grid { display: grid; grid-template-columns: 200px 1fr 200px; height: 100%; }
-.lab-panel { border: 1px solid rgba(0, 229, 255, 0.1); padding: 15px; overflow-y: auto; }
-.stat-box { margin-bottom: 15px; border-left: 2px solid var(--p); padding-left: 10px; }
+/* DAY */
+#day-overlay{position:fixed;inset:0;background:#000;z-index:8000000;display:none;flex-direction:column;align-items:center;justify-content:center;gap:14px;}
+.day-title{font-size:clamp(14px,3.5vw,28px);color:var(--p);letter-spacing:6px;text-shadow:0 0 20px var(--p);}
+.day-sub{font-size:clamp(7px,1.2vw,10px);opacity:.45;letter-spacing:3px;}
+.day-lines{display:flex;flex-direction:column;margin-top:16px;width:clamp(240px,60vw,420px);}
+.day-line{font-size:clamp(8px,1.2vw,10px);color:#00ff88;line-height:2.2;opacity:0;transition:opacity .2s;font-family:'Share Tech Mono',monospace;}
+.day-line.show{opacity:1;}
+
+/* SHUTDOWN */
+#shutdown-screen{position:fixed;inset:0;background:#000;z-index:9000000;display:none;flex-direction:column;align-items:center;justify-content:center;gap:20px;}
+.sh-msg{font-size:clamp(8px,1.5vw,12px);color:rgba(255,255,255,.25);letter-spacing:2px;text-align:center;line-height:2;}
+
+/* ADMIN */
+#admin-panel{position:fixed;inset:0;background:rgba(0,0,0,.98);z-index:10000000;display:none;align-items:flex-start;justify-content:center;padding:clamp(10px,2vw,24px);overflow-y:auto;}
+#admin-panel.open{display:flex;}
+.adm-win{width:100%;max-width:880px;background:rgba(5,8,12,.99);border:1px solid rgba(0,229,255,.2);margin:auto;}
+.adm-tb{background:linear-gradient(90deg,rgba(0,229,255,.08),transparent);border-bottom:1px solid rgba(0,229,255,.12);padding:12px 16px;display:flex;align-items:center;justify-content:space-between;}
+.adm-ttxt{font-size:9px;color:var(--p);letter-spacing:3px;}
+.adm-x{color:var(--err);font-size:9px;cursor:none;padding:3px 8px;border:1px solid rgba(255,0,85,.25);font-family:var(--font);}
+.adm-tabs{display:flex;border-bottom:1px solid rgba(0,229,255,.1);flex-wrap:wrap;}
+.adm-tab{font-size:clamp(7px,1vw,9px);padding:10px 14px;cursor:none;color:rgba(255,255,255,.28);border-bottom:2px solid transparent;letter-spacing:1px;transition:color .2s;}
+.adm-tab:hover{color:var(--p);}
+.adm-tab.on{color:var(--p);border-bottom-color:var(--p);}
+.adm-body{padding:clamp(12px,2vw,24px);}
+.tab-pane{display:none;}
+.tab-pane.on{display:block;}
+.a-sec{font-size:8px;color:rgba(0,229,255,.45);letter-spacing:3px;margin:16px 0 10px;border-bottom:1px solid rgba(0,229,255,.07);padding-bottom:6px;}
+.a-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:12px;}
+.a-field{display:flex;flex-direction:column;gap:5px;}
+.a-lbl{font-size:7px;color:rgba(255,255,255,.28);letter-spacing:1px;}
+.a-inp{background:rgba(0,0,0,.8);border:1px solid rgba(0,229,255,.14);color:var(--p);padding:8px 10px;font-family:'Share Tech Mono',monospace;font-size:10px;letter-spacing:1px;cursor:none;width:100%;}
+.a-inp:focus{border-color:rgba(0,229,255,.45);}
+.a-ta{background:rgba(0,0,0,.8);border:1px solid rgba(0,229,255,.14);color:var(--p);padding:8px 10px;font-family:'Share Tech Mono',monospace;font-size:10px;width:100%;height:80px;resize:vertical;cursor:none;}
+.a-save{width:100%;margin-top:16px;padding:12px;font-family:var(--font);font-size:9px;letter-spacing:2px;background:rgba(0,229,255,.05);border:1px solid rgba(0,229,255,.25);color:var(--p);cursor:none;transition:background .2s;}
+.a-save:hover{background:rgba(0,229,255,.1);}
+.a-hint{font-size:8px;color:rgba(255,255,255,.18);text-align:center;padding:10px 0 4px;letter-spacing:2px;}
 </style>
 </head>
-<body>
+<body id="mainbody">
 
-<div id="cursor"></div>
+<!-- CURSOR -->
+<div id="cur">
+  <svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M2 2L2 14L6 10L9 17L11 16L8 9L14 9Z" fill="#00e5ff" stroke="#003344" stroke-width=".5"/>
+  </svg>
+</div>
+<div id="cur-sym">⊕</div>
+<div id="cur-trail"></div>
 
-<div id="start-screen" class="screen active" onclick="boot()">
-    <h1 id="ui-main-title" style="font-size: 40px; color:var(--p);"></h1>
-    <p id="ui-click-msg" style="margin-top:20px; font-size:10px; opacity:0.5;"></p>
+<!-- HINT [P] -->
+<div id="p-hint"><span>[P]</span> CONFIG</div>
+
+<!-- START -->
+<div id="start-screen" class="screen active" onclick="goBoot()">
+  <div class="start-grid"></div>
+  <div class="start-title" id="ui-title">VOID_CORE</div>
+  <div class="start-sub" id="ui-sub">INICIALIZAR SISTEMA</div>
 </div>
 
+<!-- BOOT -->
 <div id="boot-screen" class="screen">
-    <div style="width: 300px;">
-        <div id="boot-text" style="font-size:9px; color:var(--p); margin-bottom:10px;"></div>
-        <div style="width: 100%; height: 2px; background: rgba(0,229,255,0.1);"><div id="boot-bar" style="width:0%; height:100%; background:var(--p);"></div></div>
-    </div>
+  <div class="boot-logo" id="boot-logo">VOID_SYSTEM OS v3.1 — NODO_S7</div>
+  <div id="boot-lines"></div>
+  <div class="bbar-wrap"><div class="bbar" id="bbar"></div></div>
 </div>
 
+<!-- DESKTOP -->
 <div id="desktop" class="screen">
-    <div style="position:absolute; top:40px; left:40px;">
-        <div class="icon" ondblclick="toggleWin('win-lab', true)" style="text-align:center; cursor:inherit;">
-            <div style="font-size:45px;">☣️</div>
-            <span id="ui-icon-lab" style="font-size:8px; color:var(--p); display:block; margin-top:5px;"></span>
-        </div>
-    </div>
-
-    <div id="win-lab" class="win" style="width:850px; height:550px; top:5%; left:5%;">
-        <div class="win-header">
-            <span id="ui-lab-header"></span>
-            <span id="lab-user-tag" style="opacity:0.5; font-size:8px;">SIN_SESION</span>
-            <span onclick="toggleWin('win-lab', false)" style="color:var(--err)">[X]</span>
-        </div>
-        
-        <div id="lab-login">
-            <div style="font-size:10px; color:var(--p); margin-bottom:20px; letter-spacing:2px;">IDENTIFICACIÓN REQUERIDA</div>
-            <input type="text" id="lab-user-name" placeholder="NOMBRE DEL CIENTÍFICO" style="width:250px; text-align:center;">
-            <input type="password" id="lab-user-key" placeholder="LLAVE MÉDICA" style="width:250px; text-align:center;">
-            <button class="btn-ui" onclick="accessLab()" style="width:250px;">REGISTRAR ACCESO</button>
-        </div>
-
-        <div id="lab-main">
-            <div class="lab-grid">
-                <div class="lab-panel" id="subject-list"></div>
-                
-                <div class="lab-panel" style="background: rgba(0,0,0,0.3);">
-                    <div style="font-size:9px; color:var(--p); margin-bottom:20px; border-bottom:1px solid var(--p);">ANÁLISIS DE TEJIDO_01</div>
-                    <div id="lab-vital-stats">
-                        <div class="stat-box"><small>ESTABILIDAD CELULAR</small><br>98.4%</div>
-                        <div class="stat-box"><small>ACTIVIDAD NEURONAL</small><br>CRÍTICA</div>
-                        <div class="stat-box"><small>NIVEL DE SEDACIÓN</small><br>10%</div>
-                    </div>
-                    <div style="margin-top:40px; display:flex; flex-direction:column; gap:10px;">
-                        <button class="btn-ui" onclick="sfx(200,'sine',0.2,0.1)">INYECTAR_SUERO</button>
-                        <button class="btn-ui" onclick="sfx(100,'square',0.5,0.1)">RESETEAR_SIGNOS</button>
-                    </div>
-                </div>
-
-                <div class="lab-panel" style="display:flex; flex-direction:column; justify-content:center; align-items:center;">
-                    <div style="font-size:8px; text-align:center; margin-bottom:20px; opacity:0.6;">ACCESO AL NÚCLEO</div>
-                    <button class="btn-ui" id="ui-btn-console" onclick="openTerminal()"></button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div id="win-con" class="win">
-        <div class="win-header"><span>ROOT_TERMINAL</span><span onclick="toggleWin('win-con', false)" style="color:var(--err)">[X]</span></div>
-        <div id="con-log"></div>
-        <div id="con-input-area" style="padding:20px; background:#05070a;">
-            <input type="password" id="con-pass" placeholder="PASSWORD" onkeydown="checkPass(event)">
-        </div>
-        <div id="con-btns" style="display:none; grid-template-columns: 1fr 1fr 1fr; gap:10px; padding:20px;">
-            <button class="btn-ui" onclick="execAction()">OPTIMIZAR</button>
-            <button class="btn-ui" onclick="execAction()">PURGAR</button>
-            <button class="btn-ui" onclick="execAction()">COLAPSAR</button>
-        </div>
-    </div>
+  <div class="desktop-bg"></div>
+  <div class="d-icon" ondblclick="openLab()">
+    <div class="d-icon-g">☣️</div>
+    <div class="d-icon-l" id="ui-lab-label">LAB_CONTROL</div>
+  </div>
+  <div class="taskbar">
+    <button class="tbar-btn" onclick="playClick()">▶ INICIO</button>
+    <div class="tbar-time" id="tbar-time">00:00:00</div>
+  </div>
 </div>
 
-<div id="action-loader">
-    <div id="ui-proc-msg" style="font-size:10px; color:var(--p); margin-bottom:20px;"></div>
-    <div style="width:300px; height:3px; background:rgba(0,229,255,0.1);"><div id="load-fill" style="width:0%; height:100%; background:var(--p);"></div></div>
+<!-- LAB WINDOW -->
+<div id="lab-overlay" class="win-overlay">
+  <div class="window" style="height:clamp(360px,82vh,600px);">
+    <div class="win-tb">
+      <span class="win-title">☣ <span id="ui-lab-header">LAB_CONTROL</span> — EXP-2401</span>
+      <div class="win-x" onclick="closeLab()">✕ CERRAR</div>
+    </div>
+    <div class="win-mb">
+      <div class="win-mi">Archivo</div>
+      <div class="win-mi">Ver</div>
+      <div class="win-mi">Sistema</div>
+      <div class="win-mi">Ayuda</div>
+    </div>
+    <div class="lab-grid" id="lab-grid">
+      <div class="lab-panel">
+        <div class="lab-pt">SUJETOS MONITOREADOS</div>
+        <div id="subject-list"></div>
+      </div>
+      <div class="lab-panel" style="background:rgba(0,0,0,.2);">
+        <div class="lab-pt">ANÁLISIS TEJIDO_01</div>
+        <div class="stat-row"><div class="stat-label">ESTABILIDAD CELULAR</div><div class="stat-val">98.4%</div><div class="stat-bar"><div class="stat-bf" style="width:98%"></div></div></div>
+        <div class="stat-row"><div class="stat-label">ACTIVIDAD NEURONAL</div><div class="stat-val" style="color:var(--err)">CRÍTICA</div><div class="stat-bar"><div class="stat-bf" style="width:45%;background:var(--err)"></div></div></div>
+        <div class="stat-row"><div class="stat-label">NIVEL SEDACIÓN</div><div class="stat-val">10%</div><div class="stat-bar"><div class="stat-bf" style="width:10%"></div></div></div>
+        <div class="lab-log" id="lab-log">
+          <div class="llog-line">> Sistema iniciado correctamente.</div>
+          <div class="llog-line">> 23 instancias cargadas en memoria.</div>
+          <div class="llog-line">> Canal digital: ACTIVO.</div>
+        </div>
+        <div class="btn-row">
+          <button class="btn ok" id="labbtn1" onclick="playClick();labAction('optimizar')">⚙ OPTIMIZAR SERVIDOR</button>
+          <button class="btn" id="labbtn2" onclick="playClick();labAction('ganador')">🏆 EXTRAER GANADOR</button>
+          <button class="btn red" id="labbtn3" onclick="playClick();labAction('eliminados')">⚠ EXTRAER ELIMINADOS</button>
+        </div>
+      </div>
+      <div class="lab-panel" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;">
+        <div style="font-size:7px;color:rgba(255,255,255,.28);letter-spacing:2px;text-align:center;">ACCESO AL NÚCLEO</div>
+        <button class="btn" onclick="playClick();openConsole()">⬛ ABRIR CONSOLA</button>
+        <div style="font-size:7px;color:rgba(0,255,136,.35);margin-top:8px;text-align:center;">CANAL ESTABLE</div>
+      </div>
+    </div>
+  </div>
 </div>
 
+<!-- CONSOLE WINDOW -->
+<div id="con-overlay" class="win-overlay">
+  <div class="window">
+    <div class="win-tb">
+      <span class="win-title">⬛ ROOT_TERMINAL — RETROCRAFT SYSTEM</span>
+      <div class="win-x" onclick="closeConsole()">✕ CERRAR</div>
+    </div>
+    <div class="con-body">
+      <div class="con-out" id="con-out"></div>
+      <div class="con-ir">
+        <span class="con-prompt" id="con-prompt">ROOT@VOID:~$ </span>
+        <input class="con-input" id="con-input" autocomplete="off" autocapitalize="off" spellcheck="false" onkeydown="handleConsole(event)" oninput="playType()">
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- GLITCH -->
 <div id="glitch-overlay">
-    <div id="glitch-rain" style="position:absolute; inset:0; font-family:monospace; font-size:10px; color:#0f0; opacity:0.3; word-break:break-all;"></div>
-    <div style="position:relative; z-index:10; display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%;">
-        <div style="font-size:100px; transform:rotate(90deg); color:var(--err);">:)</div>
-        <div id="glitch-msg-ui" style="font-size:30px; color:#fff; margin-top:20px;"></div>
-    </div>
+  <div class="scanlines"></div>
+  <div class="rgb"></div>
+  <div class="g-rain" id="g-rain"></div>
+  <div class="g-tear" id="g-tear"></div>
+  <div class="g-center">
+    <div class="g-face" id="g-face">:)</div>
+    <div class="g-txt" id="g-txt"></div>
+    <div class="g-sub" id="g-sub"></div>
+  </div>
+  <div class="g-count" id="g-count"></div>
 </div>
 
-<div id="day-init-overlay">
-    <h2 id="ui-day-title" style="color:var(--p); font-size:30px; letter-spacing:10px;"></h2>
-    <p id="ui-day-subtitle" style="margin-top:10px; font-size:10px; opacity:0.7;"></p>
+<!-- DAY -->
+<div id="day-overlay">
+  <div class="day-title" id="day-title">INICIANDO DÍA</div>
+  <div class="day-sub" id="day-sub">Restaurando entorno...</div>
+  <div class="day-lines" id="day-lines"></div>
 </div>
 
+<!-- SHUTDOWN -->
 <div id="shutdown-screen">
-    <p id="ui-shutdown-msg" style="font-size:12px; margin-bottom:30px; color:#444;"></p>
-    <button class="btn-ui" id="ui-reset-btn" onclick="location.reload()" style="z-index:9000000; position:relative;"></button>
+  <div class="sh-msg" id="sh-msg">SISTEMA_OFFLINE</div>
+  <button class="btn" onclick="location.reload()" style="margin-top:12px;" id="sh-btn">REINICIAR</button>
 </div>
 
-<div id="menu-p">
-    <div class="p-container">
-        <h2 style="color:var(--p); margin-bottom:20px;">CONFIG_PANEL</h2>
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px;">
-            <div>
-                <label>Color P</label><input type="color" id="cfg-p-color">
-                <label>Fondo</label><input type="color" id="cfg-bg-color">
-                <label>Título</label><input type="text" id="cfg-title">
-                <label>Click</label><input type="text" id="cfg-click">
-                <label>ID</label><input type="text" id="cfg-sci">
-                <label>Pass</label><input type="text" id="cfg-pass">
-            </div>
-            <div>
-                <label>Día Tit</label><input type="text" id="cfg-day-t">
-                <label>Día Sub</label><input type="text" id="cfg-day-st">
-                <label>Panic</label><input type="text" id="cfg-glitch">
-                <label>Carga</label><input type="text" id="cfg-proc">
-                <label>Off Msg</label><input type="text" id="cfg-sh-msg">
-                <label>Reset</label><input type="text" id="cfg-sh-btn">
-            </div>
-        </div>
-        <button class="btn-ui" style="width:100%; margin-top:20px;" onclick="apply()">GUARDAR Y SINCRONIZAR</button>
+<!-- ADMIN -->
+<div id="admin-panel">
+  <div class="adm-win">
+    <div class="adm-tb">
+      <span class="adm-ttxt">⚙ CONFIG_PANEL — VOID_SYSTEM</span>
+      <div class="adm-x" onclick="closeAdmin()">✕ CERRAR</div>
     </div>
+    <div class="adm-tabs">
+      <div class="adm-tab on" onclick="switchTab('t-general',this)">🖥 General</div>
+      <div class="adm-tab" onclick="switchTab('t-boot',this)">⚡ Boot</div>
+      <div class="adm-tab" onclick="switchTab('t-lab',this)">☣ Laboratorio</div>
+      <div class="adm-tab" onclick="switchTab('t-consola',this)">⬛ Consola</div>
+      <div class="adm-tab" onclick="switchTab('t-glitch',this)">💥 Glitch</div>
+      <div class="adm-tab" onclick="switchTab('t-final',this)">🎭 Final</div>
+    </div>
+    <div class="adm-body">
+      <div class="tab-pane on" id="t-general">
+        <div class="a-sec">IDENTIDAD</div>
+        <div class="a-grid">
+          <div class="a-field"><div class="a-lbl">TÍTULO PRINCIPAL</div><input class="a-inp" id="a-title"></div>
+          <div class="a-field"><div class="a-lbl">SUBTÍTULO</div><input class="a-inp" id="a-sub"></div>
+          <div class="a-field"><div class="a-lbl">COLOR (HEX)</div><input class="a-inp" id="a-color"></div>
+        </div>
+        <div class="a-sec">CURSOR</div>
+        <div class="a-grid">
+          <div class="a-field"><div class="a-lbl">SÍMBOLO SOBRE BOTONES</div><input class="a-inp" id="a-cursym" maxlength="2"></div>
+          <div class="a-field"><div class="a-lbl">TEXTO HINT [P] (vacío = ocultar)</div><input class="a-inp" id="a-phint"></div>
+        </div>
+      </div>
+      <div class="tab-pane" id="t-boot">
+        <div class="a-sec">ARRANQUE</div>
+        <div class="a-grid">
+          <div class="a-field" style="grid-column:1/-1"><div class="a-lbl">LOGO DEL BOOT</div><input class="a-inp" id="a-bootlogo" style="width:100%"></div>
+        </div>
+        <div class="a-field"><div class="a-lbl">LÍNEAS (una por línea)</div><textarea class="a-ta" id="a-bootlines"></textarea></div>
+      </div>
+      <div class="tab-pane" id="t-lab">
+        <div class="a-sec">LABORATORIO</div>
+        <div class="a-grid">
+          <div class="a-field"><div class="a-lbl">NOMBRE DEL LAB</div><input class="a-inp" id="a-labname"></div>
+          <div class="a-field"><div class="a-lbl">INSTANCIAS</div><input class="a-inp" id="a-inst"></div>
+          <div class="a-field"><div class="a-lbl">PROTOCOLO</div><input class="a-inp" id="a-proto"></div>
+        </div>
+        <div class="a-sec">BOTONES</div>
+        <div class="a-grid">
+          <div class="a-field"><div class="a-lbl">BTN 1 (verde)</div><input class="a-inp" id="a-btn1"></div>
+          <div class="a-field"><div class="a-lbl">BTN 2 (normal)</div><input class="a-inp" id="a-btn2"></div>
+          <div class="a-field"><div class="a-lbl">BTN 3 (rojo — activa glitch)</div><input class="a-inp" id="a-btn3"></div>
+        </div>
+      </div>
+      <div class="tab-pane" id="t-consola">
+        <div class="a-sec">CONSOLA</div>
+        <div class="a-grid">
+          <div class="a-field"><div class="a-lbl">COMANDO DE INICIO DE DÍA</div><input class="a-inp" id="a-startcmd"></div>
+          <div class="a-field"><div class="a-lbl">ID CIENTÍFICO</div><input class="a-inp" id="a-sci"></div>
+        </div>
+      </div>
+      <div class="tab-pane" id="t-glitch">
+        <div class="a-sec">GLITCH — SONIDO Y ANIMACIÓN</div>
+        <div class="a-grid">
+          <div class="a-field"><div class="a-lbl">DURACIÓN TOTAL (ms)</div><input class="a-inp" id="a-gdur" type="number"></div>
+          <div class="a-field"><div class="a-lbl">TEXTO LÍNEA 1 (cara :))</div><input class="a-inp" id="a-gtext"></div>
+          <div class="a-field"><div class="a-lbl">TEXTO LÍNEA 2 (subtexto)</div><input class="a-inp" id="a-gtext2"></div>
+          <div class="a-field"><div class="a-lbl">TEXTO CONTADOR (fondo)</div><input class="a-inp" id="a-gcounter"></div>
+          <div class="a-field"><div class="a-lbl">VOLUMEN GLITCH (0.0-1.0)</div><input class="a-inp" id="a-gvol" type="number" step="0.05" min="0" max="1"></div>
+          <div class="a-field"><div class="a-lbl">COLOR CARA</div><input class="a-inp" id="a-gfacecolor"></div>
+        </div>
+      </div>
+      <div class="tab-pane" id="t-final">
+        <div class="a-sec">PANTALLA DE DÍA</div>
+        <div class="a-grid">
+          <div class="a-field"><div class="a-lbl">TÍTULO</div><input class="a-inp" id="a-daytitle"></div>
+          <div class="a-field"><div class="a-lbl">SUBTÍTULO</div><input class="a-inp" id="a-daysub"></div>
+        </div>
+        <div class="a-field"><div class="a-lbl">LÍNEAS (una por línea)</div><textarea class="a-ta" id="a-daylines"></textarea></div>
+        <div class="a-sec">PANTALLA FINAL</div>
+        <div class="a-grid">
+          <div class="a-field"><div class="a-lbl">MENSAJE OFFLINE</div><input class="a-inp" id="a-shmsg"></div>
+          <div class="a-field"><div class="a-lbl">BOTÓN</div><input class="a-inp" id="a-shbtn"></div>
+        </div>
+      </div>
+      <button class="a-save" onclick="saveAdmin()">💾 GUARDAR Y APLICAR</button>
+      <div class="a-hint">[ P ] ABRIR / CERRAR PANEL DE CONFIG</div>
+    </div>
+  </div>
 </div>
 
 <script>
-const AC = new (window.AudioContext || window.webkitAudioContext)();
-let config = {
-    pColor: "#00e5ff", bgColor: "#010204", title: "VOID_CORE", clickMsg: "INICIALIZAR",
-    pass: "1234", sci: "USER_7", dayTitle: "INICIANDO DIA", daySubtitle: "Restaurando...",
-    labName: "AREA_EXPERIMENTAL", glitch: "SISTEMA_CORRUPTO", proc: "CARGANDO...",
-    shMsg: "SISTEMA_OFFLINE", shBtn: "REINICIAR",
-    errors: "FATAL_ERR, MEMORY_LEAK, NULL_REF, KERNEL_PANIC"
+// ── AUDIO ──────────────────────────────────────────────────────────
+let _ac=null;
+function AC(){return _ac||(_ac=new(window.AudioContext||window.webkitAudioContext)());}
+function playClick(){const c=AC(),n=c.currentTime,o=c.createOscillator(),g=c.createGain();o.type='square';o.frequency.setValueAtTime(120,n);o.frequency.exponentialRampToValueAtTime(40,n+.05);g.gain.setValueAtTime(.12,n);g.gain.exponentialRampToValueAtTime(.001,n+.07);o.connect(g);g.connect(c.destination);o.start(n);o.stop(n+.08);}
+function playType(){const c=AC(),n=c.currentTime,o=c.createOscillator(),g=c.createGain();o.type='square';o.frequency.value=Math.random()>.5?880:920;g.gain.setValueAtTime(.05,n);g.gain.linearRampToValueAtTime(0,n+.02);o.connect(g);g.connect(c.destination);o.start(n);o.stop(n+.025);}
+function playHurt(){const c=AC(),n=c.currentTime,o=c.createOscillator(),g=c.createGain();o.type='sawtooth';o.frequency.setValueAtTime(160,n);o.frequency.exponentialRampToValueAtTime(60,n+.25);g.gain.setValueAtTime(.2,n);g.gain.linearRampToValueAtTime(0,n+.28);o.connect(g);g.connect(c.destination);o.start(n);o.stop(n+.3);}
+
+// GLITCH SOUND — MEJORADO: múltiples capas, más largo, más intenso
+function playGlitchLayered(vol){
+  vol=vol||cfg.glitchVol;
+  const c=AC();const n=c.currentTime;
+  // Capa 1: ruido blanco
+  const sz=Math.floor(c.sampleRate*0.35);
+  const buf=c.createBuffer(1,sz,c.sampleRate);
+  const d=buf.getChannelData(0);
+  let lv=0;
+  for(let i=0;i<sz;i++){if(i%6===0)lv=Math.random()*2-1;d[i]=lv;}
+  const src=c.createBufferSource();src.buffer=buf;
+  const g1=c.createGain();g1.gain.setValueAtTime(vol*.9,n);g1.gain.exponentialRampToValueAtTime(.001,n+.35);
+  src.connect(g1);g1.connect(c.destination);src.start(n);
+  // Capa 2: oscilador bajo
+  const o2=c.createOscillator();o2.type='sawtooth';
+  o2.frequency.setValueAtTime(80,n);o2.frequency.exponentialRampToValueAtTime(30,n+.3);
+  const g2=c.createGain();g2.gain.setValueAtTime(vol*.5,n);g2.gain.exponentialRampToValueAtTime(.001,n+.3);
+  o2.connect(g2);g2.connect(c.destination);o2.start(n);o2.stop(n+.3);
+  // Capa 3: pitido de error agudo
+  const o3=c.createOscillator();o3.type='square';
+  o3.frequency.setValueAtTime(1800,n);o3.frequency.exponentialRampToValueAtTime(200,n+.2);
+  const g3=c.createGain();g3.gain.setValueAtTime(vol*.3,n);g3.gain.exponentialRampToValueAtTime(.001,n+.22);
+  o3.connect(g3);g3.connect(c.destination);o3.start(n);o3.stop(n+.22);
+}
+function playGlitchPop(vol){
+  vol=vol||cfg.glitchVol;
+  const c=AC();const n=c.currentTime;
+  const o=c.createOscillator();o.type='sawtooth';
+  o.frequency.setValueAtTime(400+Math.random()*200,n);
+  o.frequency.exponentialRampToValueAtTime(50,n+.08);
+  const g=c.createGain();g.gain.setValueAtTime(vol*.4,n);g.gain.exponentialRampToValueAtTime(.001,n+.09);
+  o.connect(g);g.connect(c.destination);o.start(n);o.stop(n+.1);
+}
+function playGlitchDrone(vol){
+  // Zumbido constante de error
+  vol=vol||cfg.glitchVol;
+  const c=AC();const n=c.currentTime;
+  const o=c.createOscillator();o.type='sawtooth';
+  o.frequency.setValueAtTime(55,n);
+  const lfo=c.createOscillator();lfo.frequency.value=3;
+  const lfoG=c.createGain();lfoG.gain.value=20;
+  lfo.connect(lfoG);lfoG.connect(o.frequency);
+  const g=c.createGain();g.gain.setValueAtTime(vol*.15,n);g.gain.linearRampToValueAtTime(vol*.15,n+4);g.gain.exponentialRampToValueAtTime(.001,n+5);
+  o.connect(g);g.connect(c.destination);
+  lfo.start(n);o.start(n);o.stop(n+5);lfo.stop(n+5);
+}
+function playGlitchScream(vol){
+  vol=vol||cfg.glitchVol;
+  const c=AC();const n=c.currentTime;
+  const o=c.createOscillator();o.type='square';
+  o.frequency.setValueAtTime(3000,n);o.frequency.exponentialRampToValueAtTime(100,n+.6);
+  const g=c.createGain();g.gain.setValueAtTime(vol*.6,n);g.gain.exponentialRampToValueAtTime(.001,n+.65);
+  o.connect(g);g.connect(c.destination);o.start(n);o.stop(n+.7);
+}
+
+function playPulse(){const c=AC(),n=c.currentTime,o=c.createOscillator(),g=c.createGain();o.type='sine';o.frequency.setValueAtTime(1050,n);o.frequency.exponentialRampToValueAtTime(1200,n+.1);g.gain.setValueAtTime(.06,n);g.gain.exponentialRampToValueAtTime(.001,n+.12);o.connect(g);g.connect(c.destination);o.start(n);o.stop(n+.13);}
+let _gl=null,_pl=null;
+function startGlitchSound(){playGlitchLayered();_gl=setInterval(()=>{Math.random()>.5?playGlitchLayered():playGlitchPop();},180+Math.random()*120);}
+function stopGlitchSound(){clearInterval(_gl);_gl=null;}
+function startPulse(){_pl=setInterval(playPulse,700);}
+function stopPulse(){clearInterval(_pl);_pl=null;}
+
+// ── CONFIG ──────────────────────────────────────────────────────────
+let cfg={
+  title:'VOID_CORE',sub:'INICIALIZAR SISTEMA',color:'#00e5ff',curSym:'⊕',pHint:'[P] CONFIG',
+  bootlogo:'VOID_SYSTEM OS v3.1 — NODO_S7',
+  bootlines:['Inicializando núcleo...','Verificando memoria... 16384 MB OK','Cargando drivers de red...','Interfaz NODO_S7 detectada','Montando sistema de archivos...','Iniciando servicios de monitoreo...','Cargando protocolo EXP-2401...','23 instancias digitales detectadas','Canal de exportación: INESTABLE','Sistema listo.'],
+  labname:'LAB_CONTROL',inst:'23',proto:'EXP-2401',
+  btn1:'⚙ OPTIMIZAR SERVIDOR',btn2:'🏆 EXTRAER GANADOR',btn3:'⚠ EXTRAER ELIMINADOS',
+  sci:'CIENTIFICO_01',startcmd:'start day',
+  gdur:15000,gtext:'ELLOS NO VAN A SALIR',gtext2:'ERROR_FATAL // INSTANCIAS_BLOQUEADAS',gcounter:'23',glitchVol:0.4,gfaceColor:'#ff0055',
+  daytitle:'INICIANDO DÍA',daysub:'Restaurando entorno de juego...',
+  daylines:['C:\\VOID> start day','Cargando parámetros...','Sincronizando jugadores activos...','Verificando instancias...','INICIANDO DÍA.','[PROCESO COMPLETADO]'],
+  shmsg:'SISTEMA_OFFLINE — SESIÓN TERMINADA',shbtn:'REINICIAR SISTEMA'
 };
 
-function sfx(f, t, d, v) {
-    try { const o = AC.createOscillator(), g = AC.createGain(); o.type = t; o.frequency.setValueAtTime(f, AC.currentTime); g.gain.setValueAtTime(v, AC.currentTime); g.gain.exponentialRampToValueAtTime(0.001, AC.currentTime + d); o.connect(g); g.connect(AC.destination); o.start(); o.stop(AC.currentTime + d); } catch(e) {}
+// ── CURSOR ──────────────────────────────────────────────────────────
+const curEl=document.getElementById('cur');
+const curSym=document.getElementById('cur-sym');
+const trailWrap=document.getElementById('cur-trail');
+const HOVER=['BUTTON','A','INPUT','TEXTAREA'];
+const HCLS=['btn','win-x','adm-tab','win-mi','tbar-btn','d-icon','adm-x','a-save'];
+
+document.addEventListener('mousemove',e=>{
+  const mx=e.clientX,my=e.clientY;
+  curEl.style.left=mx+'px';curEl.style.top=my+'px';
+  curSym.style.left=mx+'px';curSym.style.top=my+'px';
+  const dot=document.createElement('div');
+  dot.className='tdot';dot.style.left=mx+'px';dot.style.top=my+'px';
+  dot.style.background=cfg.color;trailWrap.appendChild(dot);
+  setTimeout(()=>{dot.style.opacity='0';setTimeout(()=>dot.remove(),400);},80);
+  if(trailWrap.children.length>18) trailWrap.firstChild.remove();
+  const el=document.elementFromPoint(mx,my);
+  const isHov=el&&(HOVER.includes(el.tagName)||HCLS.some(c=>el.classList.contains(c))||el.closest('button')||el.closest('.d-icon')||el.closest('.win-x')||el.closest('.adm-x'));
+  if(isHov){curEl.style.display='none';curSym.style.display='block';curSym.innerText=cfg.curSym;}
+  else{curEl.style.display='block';curSym.style.display='none';}
+});
+document.addEventListener('mousedown',()=>{curEl.style.transform='translate(-2px,-2px) scale(0.8)';setTimeout(()=>curEl.style.transform='translate(-2px,-2px)',120);});
+document.addEventListener('touchstart',()=>AC(),{once:true,passive:true});
+
+// ── SCREENS ──────────────────────────────────────────────────────────
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>{s.classList.remove('active');setTimeout(()=>{if(!s.classList.contains('active'))s.style.display='none';},320);});
+  const t=document.getElementById(id);t.style.display='flex';
+  requestAnimationFrame(()=>requestAnimationFrame(()=>t.classList.add('active')));
 }
 
-function syncUI() {
-    document.documentElement.style.setProperty('--p', config.pColor);
-    document.documentElement.style.setProperty('--bg', config.bgColor);
-    document.getElementById('ui-main-title').innerText = config.title;
-    document.getElementById('ui-click-msg').innerText = config.clickMsg;
-    document.getElementById('ui-day-title').innerText = config.dayTitle;
-    document.getElementById('ui-day-subtitle').innerText = config.daySubtitle;
-    document.getElementById('ui-icon-lab').innerText = config.labName;
-    document.getElementById('ui-lab-header').innerText = config.labName;
-    document.getElementById('ui-btn-console').innerText = "ACCESO_ROOT";
-    document.getElementById('ui-proc-msg').innerText = config.proc;
-    document.getElementById('glitch-msg-ui').innerText = config.glitch;
-    document.getElementById('ui-shutdown-msg').innerText = config.shMsg;
-    document.getElementById('ui-reset-btn').innerText = config.shBtn;
-    
-    const sl = document.getElementById('subject-list');
-    sl.innerHTML = "<div style='font-size:8px; margin-bottom:15px; opacity:0.5'>SUJETOS_MONITOREADOS</div>";
-    for(let i=1; i<=6; i++) sl.innerHTML += `<div style="font-size:9px; margin-bottom:15px;">OBJETO_X0${i} <div style="height:2px; background:#111; margin-top:5px;"><div style="width:${Math.random()*100}%; height:100%; background:var(--p);"></div></div></div>`;
-}
-
-async function boot() {
-    if (AC.state === 'suspended') AC.resume();
-    document.getElementById('start-screen').classList.remove('active');
-    document.getElementById('boot-screen').classList.add('active');
-    const b = document.getElementById('boot-text');
-    for(let l of ["> CARGANDO...", "> VERIFICANDO...", "> OK."]) { b.innerHTML += `<div>${l}</div>`; sfx(400,'sine',0.1,0.05); await new Promise(r=>setTimeout(r,500)); }
-    document.getElementById('boot-bar').style.width = "100%";
-    await new Promise(r=>setTimeout(r,600));
-    document.getElementById('boot-screen').classList.remove('active');
-    document.getElementById('desktop').classList.add('active');
-}
-
-/* LÓGICA DE LABORATORIO */
-function accessLab() {
-    const user = document.getElementById('lab-user-name').value;
-    const key = document.getElementById('lab-user-key').value;
-    if(user.length > 2 && key === config.pass) {
-        sfx(600, 'sine', 0.5, 0.1);
-        document.getElementById('lab-login').style.display = 'none';
-        document.getElementById('lab-main').style.display = 'flex';
-        document.getElementById('lab-user-tag').innerText = `ID: ${user.toUpperCase()}`;
-    } else {
-        sfx(100, 'sawtooth', 0.3, 0.1);
-        alert("CREDENCIALES INVÁLIDAS");
-    }
-}
-
-function openTerminal() { toggleWin('win-lab', false); toggleWin('win-con', true); }
-
-function checkPass(e) {
-    if(e.key === 'Enter') {
-        if(e.target.value === config.pass) {
-            document.getElementById('con-log').innerHTML = `<div style="color:var(--p)">> SESION_INICIADA: ${config.sci}</div>`;
-            document.getElementById('con-input-area').style.display = 'none';
-            document.getElementById('con-btns').style.display = 'grid';
-            sfx(800,'sine',0.2,0.05);
-        } else sfx(100,'sawtooth',0.3,0.1);
-        e.target.value = "";
-    }
-}
-
-async function execAction() {
-    const loader = document.getElementById('action-loader');
-    const fill = document.getElementById('load-fill');
-    loader.style.display = 'flex';
-    for(let i=0; i<=100; i += Math.random() * 10) {
-        if(i > 70) { 
-            document.body.classList.add('shake-active'); 
-            fill.style.background = (Math.random() > 0.5) ? 'var(--err)' : '#fff';
-            sfx(Math.random()*1000, 'sawtooth', 0.05, 0.05);
-        }
-        fill.style.width = Math.min(i, 100) + '%';
-        await new Promise(r => setTimeout(r, 80));
-    }
-    loader.style.display = 'none';
-    triggerFinalGlitch();
-}
-
-async function triggerFinalGlitch() {
-    const gl = document.getElementById('glitch-overlay');
-    const rain = document.getElementById('glitch-rain');
-    gl.style.display = 'block';
-    sfx(40, 'square', 3, 0.3);
-    const int = setInterval(() => { rain.innerText += Math.random().toString(36); }, 20);
-    await new Promise(r => setTimeout(r, 2000));
-    clearInterval(int);
-    gl.style.background = "#fff";
-    sfx(2000, 'sine', 0.1, 0.5);
-    await new Promise(r => setTimeout(r, 150));
-    gl.style.background = "#000";
-    gl.innerHTML = "";
-    document.body.classList.remove('shake-active');
-    await new Promise(r => setTimeout(r, 800));
-    const day = document.getElementById('day-init-overlay');
-    day.style.display = 'flex';
-    sfx(600, 'sine', 1, 0.1);
-    await new Promise(r => setTimeout(r, 3000));
-    day.style.display = 'none';
-    document.getElementById('shutdown-screen').style.display = 'flex';
-}
-
-function apply() {
-    config.pColor = document.getElementById('cfg-p-color').value;
-    config.bgColor = document.getElementById('cfg-bg-color').value;
-    config.title = document.getElementById('cfg-title').value;
-    config.clickMsg = document.getElementById('cfg-click').value;
-    config.sci = document.getElementById('cfg-sci').value;
-    config.pass = document.getElementById('cfg-pass').value;
-    config.dayTitle = document.getElementById('cfg-day-t').value;
-    config.daySubtitle = document.getElementById('cfg-day-st').value;
-    config.glitch = document.getElementById('cfg-glitch').value;
-    config.proc = document.getElementById('cfg-proc').value;
-    config.shMsg = document.getElementById('cfg-sh-msg').value;
-    config.shBtn = document.getElementById('cfg-sh-btn').value;
-    syncUI();
-    togglePanel(false);
-}
-
-function togglePanel(force) {
-    const p = document.getElementById('menu-p');
-    const isShowing = force !== undefined ? force : p.style.display !== 'flex';
-    p.style.display = isShowing ? 'flex' : 'none';
-    if(isShowing) {
-        document.body.classList.add('show-real-cursor');
-        document.getElementById('cfg-p-color').value = config.pColor;
-        document.getElementById('cfg-bg-color').value = config.bgColor;
-        document.getElementById('cfg-title').value = config.title;
-        document.getElementById('cfg-click').value = config.clickMsg;
-        document.getElementById('cfg-sci').value = config.sci;
-        document.getElementById('cfg-pass').value = config.pass;
-        document.getElementById('cfg-day-t').value = config.dayTitle;
-        document.getElementById('cfg-day-st').value = config.daySubtitle;
-        document.getElementById('cfg-glitch').value = config.glitch;
-        document.getElementById('cfg-proc').value = config.proc;
-        document.getElementById('cfg-sh-msg').value = config.shMsg;
-        document.getElementById('cfg-sh-btn').value = config.shBtn;
-    } else document.body.classList.remove('show-real-cursor');
-}
-
-document.addEventListener('mousemove', (e) => {
-    const c = document.getElementById('cursor');
-    c.style.left = e.clientX + 'px'; c.style.top = e.clientY + 'px';
+// ── START → BOOT ──────────────────────────────────────────────────
+document.addEventListener('keydown',e=>{
+  const tag=e.target.tagName;
+  if(tag==='INPUT'||tag==='TEXTAREA'){playType();return;}
+  if(e.key==='Enter'&&document.getElementById('start-screen').classList.contains('active')){goBoot();return;}
+  if(e.key.toLowerCase()==='p'){
+    const ap=document.getElementById('admin-panel');
+    if(ap.classList.contains('open')){closeAdmin();}else{openAdmin();}
+  }
 });
 
-function toggleWin(id, show) { document.getElementById(id).style.display = show ? 'flex' : 'none'; }
-window.addEventListener('keydown', (e) => { if(e.key.toLowerCase() === 'p') togglePanel(); });
+function goBoot(){if(AC().state==='suspended')AC().resume();playClick();showScreen('boot-screen');runBoot();}
 
-syncUI();
+function runBoot(){
+  const logo=document.getElementById('boot-logo');
+  logo.innerText=cfg.bootlogo;setTimeout(()=>logo.style.opacity='1',150);
+  const cont=document.getElementById('boot-lines');cont.innerHTML='';
+  const lines=cfg.bootlines;const ws=lines.length-3;
+  lines.forEach((txt,i)=>{
+    const d=document.createElement('div');d.className='boot-line';
+    const badge=i<ws?`<span class="bok"> OK</span>`:`<span class="berr"> WARN</span>`;
+    d.innerHTML=txt+badge;cont.appendChild(d);
+    setTimeout(()=>{d.classList.add('show');playType();},180+i*230);
+  });
+  const bar=document.getElementById('bbar');let p=0;
+  const iv=setInterval(()=>{p+=2;bar.style.width=Math.min(p,100)+'%';if(p>=100){clearInterval(iv);setTimeout(()=>showScreen('desktop'),600);}},lines.length*230/50);
+}
+
+// ── DESKTOP ──────────────────────────────────────────────────────────
+setInterval(()=>{const el=document.getElementById('tbar-time');if(el)el.innerText=new Date().toLocaleTimeString();},1000);
+
+// ── LAB ──────────────────────────────────────────────────────────────
+function openLab(){playClick();applyLabUI();document.getElementById('lab-overlay').classList.add('open');}
+function closeLab(){playClick();document.getElementById('lab-overlay').classList.remove('open');}
+
+function applyLabUI(){
+  document.getElementById('ui-lab-label').innerText=cfg.labname;
+  document.getElementById('ui-lab-header').innerText=cfg.labname;
+  document.getElementById('labbtn1').innerText=cfg.btn1;
+  document.getElementById('labbtn2').innerText=cfg.btn2;
+  document.getElementById('labbtn3').innerText=cfg.btn3;
+  const sl=document.getElementById('subject-list');sl.innerHTML='<div style="font-size:7px;margin-bottom:12px;opacity:.35;letter-spacing:1px;">SUJETOS MONITOREADOS</div>';
+  for(let i=1;i<=6;i++){const pct=Math.floor(Math.random()*80+20);const col=pct>50?cfg.color:'#ff0055';sl.innerHTML+=`<div style="font-size:8px;margin-bottom:12px;"><div style="opacity:.55;margin-bottom:4px;line-height:2;">OBJETO_X0${i}</div><div style="height:2px;background:#111;"><div style="width:${pct}%;height:100%;background:${col};box-shadow:0 0 4px ${col};"></div></div></div>`;}
+}
+
+function labLog(msg,cls=''){
+  const log=document.getElementById('lab-log');
+  const d=document.createElement('div');d.className='llog-line'+(cls?' '+cls:'');d.innerText='> '+msg;
+  log.appendChild(d);log.scrollTop=log.scrollHeight;
+}
+
+function labAction(type){
+  if(type==='optimizar'){
+    labLog('Optimizando servidor...');startPulse();
+    setTimeout(()=>{stopPulse();labLog('Optimización completa.');},2200);
+  } else if(type==='ganador'){
+    labLog('Buscando instancia ganadora...');
+    setTimeout(()=>{labLog('Instancia #03 — ESTADO: ACTIVO');setTimeout(()=>{labLog('ERROR: No responde al protocolo de salida.','e');playHurt();},1200);},1400);
+  } else if(type==='eliminados'){
+    labLog('Iniciando extracción de eliminados...','w');startPulse();
+    let p=0;const iv=setInterval(()=>{
+      p+=14;labLog('Transfiriendo... '+Math.min(p,72)+'%');
+      if(p>=72){clearInterval(iv);stopPulse();labLog('ERROR CRÍTICO: 23/23 sin respuesta.','e');playHurt();labLog('Proceso abortado. Datos retenidos.','e');setTimeout(()=>{closeLab();closeConsole();triggerGlitch();},1400);}
+    },380);
+  }
+}
+
+// ── CONSOLA ──────────────────────────────────────────────────────────
+function openConsole(){
+  playClick();
+  document.getElementById('con-out').innerHTML='';
+  document.getElementById('con-input').value='';
+  conPrint('RETROCRAFT SYSTEM — ROOT_TERMINAL','s');
+  conPrint('Comandos: '+cfg.startcmd+' | status | clear','s');
+  document.getElementById('con-overlay').classList.add('open');
+  setTimeout(()=>document.getElementById('con-input').focus(),80);
+}
+function closeConsole(){document.getElementById('con-overlay').classList.remove('open');}
+
+function conPrint(txt,cls=''){
+  const out=document.getElementById('con-out');
+  const d=document.createElement('div');d.className='con-line'+(cls?' '+cls:'');d.innerText=txt;
+  out.appendChild(d);out.scrollTop=out.scrollHeight;
+}
+
+function handleConsole(e){
+  if(e.key!=='Enter')return;
+  const inp=document.getElementById('con-input');
+  const val=inp.value.trim();inp.value='';
+  conPrint('ROOT@VOID:~$ '+val);
+  const cmd=val.toLowerCase();
+  if(cmd==='clear'){document.getElementById('con-out').innerHTML='';return;}
+  if(cmd==='status'){conPrint('Sistema operativo. '+cfg.inst+' instancias activas.','s');return;}
+  if(cmd===cfg.startcmd.toLowerCase()){runStartDay();return;}
+  conPrint('bash: comando no encontrado: '+val,'e');
+}
+
+// ── START DAY ─────────────────────────────────────────────────────────
+function runStartDay(){
+  conPrint('Ejecutando: '+cfg.startcmd,'s');startPulse();
+  setTimeout(()=>{
+    stopPulse();closeLab();closeConsole();
+    const ov=document.getElementById('day-overlay');
+    document.getElementById('day-title').innerText=cfg.daytitle;
+    document.getElementById('day-sub').innerText=cfg.daysub;
+    const cont=document.getElementById('day-lines');cont.innerHTML='';ov.style.display='flex';
+    cfg.daylines.forEach((txt,i)=>{
+      const d=document.createElement('div');d.className='day-line';d.innerText=txt;cont.appendChild(d);
+      setTimeout(()=>{d.classList.add('show');playType();},200+i*460);
+    });
+    setTimeout(()=>{
+      ov.style.display='none';
+      document.getElementById('shutdown-screen').style.display='flex';
+      document.getElementById('sh-msg').innerText=cfg.shmsg;
+      document.getElementById('sh-btn').innerText=cfg.shbtn;
+    },200+cfg.daylines.length*460+1200);
+  },1800);
+}
+
+// ── GLITCH EXTENDIDO ───────────────────────────────────────────────────
+let _tearIv=null,_blockIv=null,_countIv=null,_glitchPopIv=null;
+
+function spawnTear(){
+  const tear=document.getElementById('g-tear');
+  tear.style.display='block';
+  tear.style.top=Math.random()*100+'vh';
+  tear.style.height=(2+Math.random()*8)+'px';
+  tear.style.background=Math.random()>.5?'rgba(0,229,255,.8)':'rgba(255,0,85,.7)';
+  setTimeout(()=>tear.style.display='none',80+Math.random()*120);
+}
+
+function spawnBlock(){
+  const gl=document.getElementById('glitch-overlay');
+  const b=document.createElement('div');b.className='g-block';
+  b.style.top=Math.random()*100+'vh';
+  b.style.left=Math.random()*60+'vw';
+  b.style.width=(40+Math.random()*200)+'px';
+  b.style.opacity=(0.3+Math.random()*0.5)+'';
+  b.style.background=Math.random()>.5?'rgba(0,229,255,.4)':'rgba(255,0,85,.5)';
+  gl.appendChild(b);
+  setTimeout(()=>b.remove(),60+Math.random()*100);
+}
+
+function triggerGlitch(){
+  const gl=document.getElementById('glitch-overlay');
+  const rain=document.getElementById('g-rain');
+  const face=document.getElementById('g-face');
+  const txt=document.getElementById('g-txt');
+  const sub=document.getElementById('g-sub');
+  const counter=document.getElementById('g-count');
+  rain.innerText='';txt.innerHTML='';sub.style.opacity='0';sub.innerText='';face.style.opacity='0';counter.innerText='';
+  face.style.color=cfg.gfaceColor;
+  gl.style.display='block';
+
+  // Sonido: capas al inicio
+  playGlitchLayered(cfg.glitchVol);
+  setTimeout(()=>playGlitchScream(cfg.glitchVol),300);
+  setTimeout(()=>playGlitchDrone(cfg.glitchVol),600);
+
+  document.getElementById('mainbody').style.animation='mshake .06s infinite';
+
+  // Efectos visuales: tearing y bloques
+  _tearIv=setInterval(spawnTear,120);
+  _blockIv=setInterval(spawnBlock,80);
+
+  // Lluvia de código
+  let ri=setInterval(()=>{
+    rain.innerText+=' ERR_'+Math.random().toString(36).substr(2,6).toUpperCase()+'_0x'+Math.random().toString(16).substr(2,4).toUpperCase()+'_NULL_INSTANCE_'+Math.floor(Math.random()*9999)+' ';
+    if(rain.innerText.length>3000)rain.innerText=rain.innerText.substr(1500);
+  },25);
+
+  // Flash blanco al inicio
+  setTimeout(()=>{gl.style.background='#fff';setTimeout(()=>{gl.style.background='#000';},140);},1400);
+
+  // FASE 2: aparece cara + contador
+  setTimeout(()=>{
+    clearInterval(ri);rain.innerText='';
+    face.style.opacity='1';
+
+    // Contador regresivo (si está configurado)
+    if(cfg.gcounter){
+      let cnt=parseInt(cfg.gcounter)||23;
+      counter.innerText=cnt.toString().padStart(2,'0');
+      _countIv=setInterval(()=>{
+        if(cnt>0){cnt--;counter.innerText=cnt.toString().padStart(2,'0');}
+      },Math.floor((cfg.gdur-5000)/Math.max(parseInt(cfg.gcounter)||23,1)));
+    }
+
+    // Texto principal letra por letra
+    const msg=cfg.gtext;let i=0;
+    function nc(){if(i>=msg.length)return;const sp=document.createElement('span');sp.innerText=msg[i]===' '?'\u00A0':msg[i];txt.appendChild(sp);playType();i++;setTimeout(nc,90);}
+    nc();
+
+    // Texto secundario (aparece tras el primero)
+    setTimeout(()=>{
+      sub.innerText=cfg.gtext2;sub.style.opacity='1';
+      // Segundo scream de sonido en mitad
+      playGlitchScream(cfg.glitchVol*.7);
+    },msg.length*90+600);
+
+    // Glitch sonoro intermitente durante toda la fase
+    _glitchPopIv=setInterval(()=>playGlitchPop(cfg.glitchVol*.6),350+Math.random()*200);
+
+    // Flash intermitente rojo
+    const flashIv=setInterval(()=>{
+      gl.style.background=Math.random()>.7?'rgba(255,0,85,.15)':'#000';
+      setTimeout(()=>gl.style.background='#000',50);
+    },800);
+    setTimeout(()=>clearInterval(flashIv),cfg.gdur-3000);
+
+  },3000);
+
+  // FIN del glitch
+  setTimeout(()=>{
+    clearInterval(_tearIv);clearInterval(_blockIv);clearInterval(_countIv);clearInterval(_glitchPopIv);
+    stopGlitchSound();
+    document.getElementById('mainbody').style.animation='';
+    // Fade de salida
+    gl.style.transition='opacity .8s';gl.style.opacity='0';
+    setTimeout(()=>{
+      gl.style.display='none';gl.style.opacity='1';gl.style.transition='';
+      face.style.opacity='0';txt.innerHTML='';sub.style.opacity='0';sub.innerText='';counter.innerText='';
+      // Eliminar bloques sobrantes
+      gl.querySelectorAll('.g-block').forEach(b=>b.remove());
+      goConsoleStartDay();
+    },900);
+  },cfg.gdur);
+}
+
+function goConsoleStartDay(){
+  document.getElementById('con-out').innerHTML='';
+  document.getElementById('con-input').value='';
+  conPrint('Sesión restaurada automáticamente.','s');
+  document.getElementById('con-overlay').classList.add('open');
+  showScreen('desktop');
+  setTimeout(()=>{conPrint('ROOT@VOID:~$ '+cfg.startcmd);runStartDay();},1400);
+}
+
+// ── ADMIN ─────────────────────────────────────────────────────────────
+function openAdmin(){
+  document.getElementById('a-title').value=cfg.title;
+  document.getElementById('a-sub').value=cfg.sub;
+  document.getElementById('a-color').value=cfg.color;
+  document.getElementById('a-cursym').value=cfg.curSym;
+  document.getElementById('a-phint').value=cfg.pHint;
+  document.getElementById('a-bootlogo').value=cfg.bootlogo;
+  document.getElementById('a-bootlines').value=cfg.bootlines.join('\n');
+  document.getElementById('a-labname').value=cfg.labname;
+  document.getElementById('a-inst').value=cfg.inst;
+  document.getElementById('a-proto').value=cfg.proto;
+  document.getElementById('a-btn1').value=cfg.btn1;
+  document.getElementById('a-btn2').value=cfg.btn2;
+  document.getElementById('a-btn3').value=cfg.btn3;
+  document.getElementById('a-sci').value=cfg.sci;
+  document.getElementById('a-startcmd').value=cfg.startcmd;
+  document.getElementById('a-gdur').value=cfg.gdur;
+  document.getElementById('a-gtext').value=cfg.gtext;
+  document.getElementById('a-gtext2').value=cfg.gtext2;
+  document.getElementById('a-gcounter').value=cfg.gcounter;
+  document.getElementById('a-gvol').value=cfg.glitchVol;
+  document.getElementById('a-gfacecolor').value=cfg.gfaceColor;
+  document.getElementById('a-daytitle').value=cfg.daytitle;
+  document.getElementById('a-daysub').value=cfg.daysub;
+  document.getElementById('a-daylines').value=cfg.daylines.join('\n');
+  document.getElementById('a-shmsg').value=cfg.shmsg;
+  document.getElementById('a-shbtn').value=cfg.shbtn;
+  document.getElementById('admin-panel').classList.add('open');
+}
+function closeAdmin(){document.getElementById('admin-panel').classList.remove('open');}
+function saveAdmin(){
+  playClick();
+  cfg.title=g('a-title');cfg.sub=g('a-sub');cfg.color=g('a-color');cfg.curSym=g('a-cursym')||'⊕';
+  cfg.pHint=g('a-phint');
+  cfg.bootlogo=g('a-bootlogo');cfg.bootlines=g('a-bootlines').split('\n').filter(l=>l.trim());
+  cfg.labname=g('a-labname');cfg.inst=g('a-inst');cfg.proto=g('a-proto');
+  cfg.btn1=g('a-btn1');cfg.btn2=g('a-btn2');cfg.btn3=g('a-btn3');
+  cfg.sci=g('a-sci');cfg.startcmd=g('a-startcmd');
+  cfg.gdur=parseInt(g('a-gdur'))||15000;
+  cfg.gtext=g('a-gtext');cfg.gtext2=g('a-gtext2');cfg.gcounter=g('a-gcounter');
+  cfg.glitchVol=parseFloat(g('a-gvol'))||0.4;cfg.gfaceColor=g('a-gfacecolor')||'#ff0055';
+  cfg.daytitle=g('a-daytitle');cfg.daysub=g('a-daysub');cfg.daylines=g('a-daylines').split('\n').filter(l=>l.trim());
+  cfg.shmsg=g('a-shmsg');cfg.shbtn=g('a-shbtn');
+  applyGlobal();closeAdmin();
+}
+function g(id){return document.getElementById(id).value;}
+function switchTab(id,el){document.querySelectorAll('.tab-pane').forEach(t=>t.classList.remove('on'));document.querySelectorAll('.adm-tab').forEach(t=>t.classList.remove('on'));document.getElementById(id).classList.add('on');el.classList.add('on');playClick();}
+function applyGlobal(){
+  document.documentElement.style.setProperty('--p',cfg.color);
+  document.getElementById('ui-title').innerText=cfg.title;
+  document.getElementById('ui-sub').innerText=cfg.sub;
+  // P hint
+  const ph=document.getElementById('p-hint');
+  if(cfg.pHint){ph.innerHTML='<span>'+cfg.pHint.replace(/\[([^\]]+)\]/g,'<b>[$1]</b>')+'</span>';ph.style.display='block';}
+  else{ph.style.display='none';}
+  applyLabUI();
+}
+
+// shake keyframe
+const ss=document.createElement('style');
+ss.innerText='@keyframes mshake{0%{transform:translate(0,0)}10%{transform:translate(-10px,5px) skewX(4deg)}30%{transform:translate(10px,-6px) skewX(-3deg)}50%{transform:translate(-6px,8px) skewX(2deg)}70%{transform:translate(8px,-4px)}90%{transform:translate(-4px,3px)}100%{transform:translate(0,0)}}';
+document.head.appendChild(ss);
+
+applyGlobal();
 </script>
 </body>
 </html>
